@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrueLedger - Immutable Claims Ledger</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        'slate': {
+                           '950': '#020617',
+                           '900': '#0f172a',
+                           '800': '#1e293b',
+                        },
+                        'electric-blue': {
+                           DEFAULT: '#00aaff',
+                           '500': '#00aaff',
+                           '600': '#0099e6',
+                        },
+                        'electric-green': {
+                           DEFAULT: '#00ffaa',
+                           '500': '#00ffaa',
+                           '600': '#00e699',
+                        }
+                    },
+                    keyframes: {
+                        pulseStatus: {
+                            '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                            '50%': { opacity: 0.7, transform: 'scale(1.1)' },
+                        },
+                        zoomIn: {
+                            '0%': { opacity: 0, transform: 'scale(0.8)' },
+                            '100%': { opacity: 1, transform: 'scale(1)' },
+                        },
+                        pulseVerify: {
+                           '0%': { boxShadow: '0 0 0 0 rgba(0, 170, 255, 0.7)' },
+                           '70%': { boxShadow: '0 0 0 10px rgba(0, 170, 255, 0)' },
+                           '100%': { boxShadow: '0 0 0 0 rgba(0, 170, 255, 0)' }
+                        }
+                    },
+                    animation: {
+                        pulseStatus: 'pulseStatus 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        zoomIn: 'zoomIn 0.7s ease-out forwards',
+                        pulseVerify: 'pulseVerify 2s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+      body {
+        background-color: #020617;
+        color: #e2e8f0;
+        font-family: 'Inter', sans-serif;
+      }
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #printable-area, #printable-area * {
+          visibility: visible;
+        }
+        #printable-area {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          padding: 2rem;
+          color: black;
+          background: white;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
