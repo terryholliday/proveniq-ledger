@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import LEDGER_DATA from '../../data/LEDGER_DATA.json';
+import SineWaveBackground from '../SineWaveBackground';
 
 // Security level icons
 const SecurityIcon: React.FC<{ level: string }> = ({ level }) => {
@@ -95,7 +96,8 @@ const LandingScreen: React.FC<{ onEnterPortal: () => void }> = ({ onEnterPortal 
 
     return (
         <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-            <div className="flex-grow flex items-center justify-center">
+            <SineWaveBackground />
+            <div className="flex-grow flex items-center justify-center relative z-10">
                 <div className="text-center p-8 max-w-4xl mx-auto w-full">
                     <div className="relative h-64 flex items-center justify-center overflow-hidden mb-8">
                         {slides.map((slide, index) => (
