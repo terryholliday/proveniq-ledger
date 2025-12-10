@@ -1,5 +1,56 @@
 
 import React, { useState, useEffect } from 'react';
+import LEDGER_DATA from '../../data/LEDGER_DATA.json';
+
+// Security level icons
+const SecurityIcon: React.FC<{ level: string }> = ({ level }) => {
+    const config = LEDGER_DATA.security_levels[level as keyof typeof LEDGER_DATA.security_levels];
+    if (!config) return null;
+    
+    const iconClass = `w-4 h-4 ${config.color}`;
+    
+    if (config.icon === 'Unlock') {
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={iconClass}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+        );
+    }
+    if (config.icon === 'ShieldAlert') {
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={iconClass}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+            </svg>
+        );
+    }
+    if (config.icon === 'Lock') {
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={iconClass}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+        );
+    }
+    return null;
+};
+
+// Status badge component
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+    const statusStyles: Record<string, string> = {
+        'COMPLETED': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+        'IN_PROGRESS': 'bg-electric-blue/20 text-electric-blue border-electric-blue/30',
+        'PENDING': 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+    };
+    const statusLabels: Record<string, string> = {
+        'COMPLETED': 'Completed',
+        'IN_PROGRESS': 'In Progress',
+        'PENDING': 'Pending'
+    };
+    return (
+        <span className={`px-2 py-1 text-xs font-medium rounded-full border ${statusStyles[status] || statusStyles['PENDING']}`}>
+            {statusLabels[status] || status}
+        </span>
+    );
+};
 
 const icons = {
   link: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-electric-blue"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>,
@@ -85,6 +136,129 @@ const LandingScreen: React.FC<{ onEnterPortal: () => void }> = ({ onEnterPortal 
                         {features.map(feature => (
                             <FeatureCard key={feature.title} icon={feature.icon} title={feature.title} description={feature.description} />
                         ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Roadmap Section */}
+            <div className="bg-slate-900 py-16 sm:py-24" id="roadmap">
+                <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-base font-semibold leading-7 text-electric-blue">Development Roadmap</h2>
+                        <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{LEDGER_DATA.platform}</p>
+                        <p className="mt-4 text-lg text-slate-400 max-w-3xl mx-auto">{LEDGER_DATA.description}</p>
+                    </div>
+                    
+                    <div className="space-y-8">
+                        {LEDGER_DATA.roadmap.map((phase: any) => {
+                            // Get phase title - support both phase_name and title formats
+                            const phaseTitle = phase.phase_name 
+                                ? `Phase ${phase.phase_id}: ${phase.phase_name}` 
+                                : phase.title;
+                            
+                            // Normalize tasks from roles structure or legacy tasks array
+                            const normalizedTasks = phase.roles 
+                                ? phase.roles.flatMap((role: any) => 
+                                    role.tasks.map((task: any) => ({
+                                        title: task.title,
+                                        description: task.description,
+                                        security_level: task.security_level,
+                                        role_title: role.title
+                                    }))
+                                  )
+                                : phase.tasks?.map((task: any) => ({
+                                    title: task.task,
+                                    description: null,
+                                    security_level: task.security,
+                                    role_title: task.role
+                                  })) || [];
+
+                            return (
+                                <div key={phase.phase_id} className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
+                                    <div className="p-6 border-b border-slate-800">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                                                    phase.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                                    phase.status === 'IN_PROGRESS' ? 'bg-electric-blue/20 text-electric-blue border border-electric-blue/30' :
+                                                    'bg-slate-700/50 text-slate-400 border border-slate-600'
+                                                }`}>
+                                                    {phase.phase_id}
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-slate-100">{phaseTitle}</h3>
+                                                    <p className="text-sm text-slate-400">{phase.objective}</p>
+                                                </div>
+                                            </div>
+                                            <StatusBadge status={phase.status} />
+                                        </div>
+                                    </div>
+                                    <div className="p-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {normalizedTasks.map((task: any, taskIndex: number) => (
+                                                <div key={taskIndex} className="flex items-start gap-3 p-4 bg-slate-900/50 rounded-lg border border-slate-800/50">
+                                                    <div className="mt-0.5">
+                                                        <SecurityIcon level={task.security_level} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-slate-200">{task.title}</p>
+                                                        {task.description && (
+                                                            <p className="text-xs text-slate-400 mt-1 leading-relaxed">{task.description}</p>
+                                                        )}
+                                                        <p className="text-xs text-slate-500 mt-2">{task.role_title}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            {/* Security Classification Section */}
+            <div className="bg-slate-950 py-16 sm:py-24" id="security">
+                <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-base font-semibold leading-7 text-electric-blue">Data Classification</h2>
+                        <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">Security Levels</p>
+                        <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
+                            All tasks and data within the platform are classified according to our security framework.
+                        </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
+                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-400">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-slate-100 mb-2">L1 General</h3>
+                            <p className="text-sm text-slate-400">Public or non-sensitive information that can be shared broadly.</p>
+                        </div>
+                        
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
+                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-amber-500">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-slate-100 mb-2">L2 Sensitive</h3>
+                            <p className="text-sm text-slate-400">Internal data requiring controlled access and handling procedures.</p>
+                        </div>
+                        
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
+                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-red-500">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-slate-100 mb-2">L3 Trade Secret</h3>
+                            <p className="text-sm text-slate-400">Highly confidential proprietary information with strict access controls.</p>
+                        </div>
                     </div>
                 </div>
             </div>

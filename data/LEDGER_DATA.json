@@ -1,0 +1,145 @@
+{
+  "platform": "Proveniq Ledger",
+  "description": "The immutable chain of custody & provenance engine for enterprise insurance and legal assets.",
+  "roadmap": [
+    {
+      "phase_id": "1",
+      "phase_name": "Governance & Zero-Trust Architecture",
+      "objective": "Define the legal, security, and architectural rules before writing a single line of production code.",
+      "status": "COMPLETED",
+      "roles": [
+        {
+          "id": "ceo",
+          "title": "Chief Executive Officer",
+          "tasks": [
+            {
+              "title": "Formulate Corporate Charter & IP Assignment",
+              "description": "Execute comprehensive IP assignment agreements to ensure Proveniq owns 100% of the 'TrueManifest' patent rights.",
+              "security_level": "L3_TRADE_SECRET"
+            }
+          ]
+        },
+        {
+          "id": "cto",
+          "title": "Chief Technology Officer",
+          "tasks": [
+            {
+              "title": "Define Zero-Trust Security Policy",
+              "description": "Establish the 'Never Trust, Always Verify' protocol, mandating mTLS and identity-aware proxies for every microservice.",
+              "security_level": "L2_SENSITIVE"
+            }
+          ]
+        },
+        {
+          "id": "lead_architect",
+          "title": "Lead Architect",
+          "tasks": [
+            {
+              "title": "Select Multi-Region Data Residency Strategy",
+              "description": "Determine initial cloud regions (e.g., us-east1, eu-west1) to ensure GDPR/CCPA compliance for data locality.",
+              "security_level": "L2_SENSITIVE"
+            }
+          ]
+        },
+        {
+          "id": "compliance_officer",
+          "title": "Compliance Officer",
+          "tasks": [
+            {
+              "title": "Map Regulatory Requirements",
+              "description": "Create a unified compliance matrix mapping schema fields to specific GDPR, CCPA, and SOC 2 retention rules.",
+              "security_level": "L1_GENERAL"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "2",
+      "phase_name": "Core Infrastructure & 'Visual Truth' Engine",
+      "objective": "Build the backend plumbing and the core AI models that power the valuation engine.",
+      "status": "IN_PROGRESS",
+      "roles": [
+        {
+          "id": "backend_devops_engineer",
+          "title": "Backend/DevOps Engineer",
+          "tasks": [
+            {
+              "title": "Provision Infrastructure as Code (Terraform)",
+              "description": "Script the entire GCP environment (VPC, Firestore, Cloud Run) to ensure immutable infrastructure.",
+              "security_level": "L3_TRADE_SECRET"
+            },
+            {
+              "title": "Implement Secrets Management Rotation",
+              "description": "Configure Google Secret Manager to automatically rotate API keys and database credentials every 30 days.",
+              "security_level": "L3_TRADE_SECRET"
+            }
+          ]
+        },
+        {
+          "id": "ai_safety_specialist",
+          "title": "AI Safety Specialist",
+          "tasks": [
+            {
+              "title": "Train Baseline Valuation Models",
+              "description": "Supervise training of computer vision models to distinguish between 'New' and 'Damaged' inventory states.",
+              "security_level": "L3_TRADE_SECRET"
+            }
+          ]
+        },
+        {
+          "id": "product_owner",
+          "title": "Product Owner",
+          "tasks": [
+            {
+              "title": "Define MVP Feature Freeze Scope",
+              "description": "Lock down the exact list of API endpoints required for the first carrier pilot to prevent scope creep.",
+              "security_level": "L2_SENSITIVE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "3",
+      "title": "Phase 3: Integration Sandbox & Alpha Pilots",
+      "objective": "Open partner doors via sandboxed environments.",
+      "status": "PENDING",
+      "tasks": [
+        { "role": "Solutions Engineer", "task": "Deploy Partner Sandbox Environment", "security": "L2_SENSITIVE" },
+        { "role": "Solutions Engineer", "task": "Write OpenAPI (Swagger) Specification", "security": "L1_GENERAL" },
+        { "role": "Frontend Specialist", "task": "Release Partner Portal Alpha", "security": "L2_SENSITIVE" },
+        { "role": "Partnerships Manager", "task": "Sign First Pilot LOI", "security": "L3_TRADE_SECRET" }
+      ]
+    },
+    {
+      "phase_id": "4",
+      "title": "Phase 4: Security Hardening & Beta Certification",
+      "objective": "Third-party audits, pen-testing, and legal finalization.",
+      "status": "PENDING",
+      "tasks": [
+        { "role": "QA Specialist", "task": "Coordinate 3rd Party Penetration Test", "security": "L3_TRADE_SECRET" },
+        { "role": "QA Specialist", "task": "Run Disaster Recovery (DR) Drill", "security": "L3_TRADE_SECRET" },
+        { "role": "Compliance Officer", "task": "Finalize SOC 2 Type I Report", "security": "L2_SENSITIVE" },
+        { "role": "Lead Architect", "task": "Implement WAF (Cloud Armor) Rules", "security": "L2_SENSITIVE" }
+      ]
+    },
+    {
+      "phase_id": "5",
+      "title": "Phase 5: Global Scale & Ecosystem Optimization",
+      "objective": "Cost optimization, latency reduction, and new revenue streams.",
+      "status": "PENDING",
+      "tasks": [
+        { "role": "Data Scientist", "task": "Deploy Dynamic Pricing Model", "security": "L3_TRADE_SECRET" },
+        { "role": "Data Scientist", "task": "Generate Cross-Partner Industry Insights", "security": "L2_SENSITIVE" },
+        { "role": "Partnerships Manager", "task": "Launch Developer Marketplace", "security": "L2_SENSITIVE" },
+        { "role": "CEO", "task": "Initiate Series B Funding Round", "security": "L3_TRADE_SECRET" }
+      ]
+    }
+  ],
+  "security_levels": {
+    "L1_GENERAL": { "color": "text-slate-400", "icon": "Unlock" },
+    "L2_SENSITIVE": { "color": "text-amber-500", "icon": "ShieldAlert" },
+    "L3_TRADE_SECRET": { "color": "text-red-500", "icon": "Lock" }
+  }
+}
