@@ -21,7 +21,7 @@ const callGemini = async (prompt: string): Promise<string> => {
 
 export const getAIAssistantResponse = async (ledger: Block[], question: string): Promise<string> => {
     try {
-        const prompt = `You are a professional audit assistant for the TrueLedger platform. Your role is to analyze an immutable claims ledger and answer questions with precision and clarity. You must answer ONLY based on the provided JSON data. Do not invent information or make assumptions. If the answer cannot be found in the data, state that clearly. Be concise and professional in your response.
+        const prompt = `You are a professional audit assistant for ClaimsIQ by Proveniq. Your role is to analyze an immutable claims ledger and answer questions with precision and clarity. You must answer ONLY based on the provided JSON data. Do not invent information or make assumptions. If the answer cannot be found in the data, state that clearly. Be concise and professional in your response.
 
 Here is the complete, cryptographically linked ledger data:
 \`\`\`json

@@ -91,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ isLiveMode, setIsLiveMode, currentView,
                 <div className="flex items-center justify-between h-20">
                     <div className="flex items-center space-x-3">
                         <ShieldCheckIcon />
-                        <h1 className="text-2xl font-bold text-slate-100 tracking-wider">TrueLedger</h1>
+                        <h1 className="text-2xl font-bold text-slate-100 tracking-wider">ClaimsIQ</h1>
                     </div>
 
                     <nav className="hidden md:flex items-center space-x-4">
