@@ -32,7 +32,7 @@ const NavButton: React.FC<{ isActive: boolean; onClick: () => void; children: Re
     );
 };
 
-const UserSwitcher: React.FC<{ currentUser: User; users: User[]; onSwitchUser: (userId: string) }> = ({ currentUser, users, onSwitchUser }) => {
+const UserSwitcher: React.FC<{ currentUser: User; users: User[]; onSwitchUser: (userId: string) => void }> = ({ currentUser, users, onSwitchUser }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 

@@ -1,0 +1,238 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // HELPER FUNCTIONS
+    // =========================================================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Get user document
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    // Check user role
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+    
+    // Check if user has any of the specified roles
+    function hasAnyRole(roles) {
+      return isAuthenticated() && getUserData().role in roles;
+    }
+    
+    // Administrator has full access
+    function isAdmin() {
+      return hasRole('Administrator');
+    }
+    
+    // Auditor can read all, write annotations
+    function isAuditor() {
+      return hasRole('Auditor');
+    }
+    
+    // Viewer has read-only access
+    function isViewer() {
+      return hasRole('Viewer');
+    }
+    
+    // Can read (any authenticated user)
+    function canRead() {
+      return hasAnyRole(['Administrator', 'Auditor', 'Viewer']);
+    }
+    
+    // Can write (Admin or Auditor for specific collections)
+    function canWrite() {
+      return hasAnyRole(['Administrator', 'Auditor']);
+    }
+    
+    // Admin only write
+    function canAdminWrite() {
+      return isAdmin();
+    }
+    
+    // =========================================================================
+    // USERS COLLECTION
+    // =========================================================================
+    
+    match /users/{userId} {
+      // Users can read their own profile, admins can read all
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      
+      // Only admins can create/update/delete users
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // =========================================================================
+    // PARTNERS COLLECTION
+    // =========================================================================
+    
+    match /partners/{partnerId} {
+      allow read: if canRead();
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // =========================================================================
+    // CLAIMS (BLOCKS) COLLECTION
+    // =========================================================================
+    
+    match /claims/{claimId} {
+      // All authenticated users can read claims
+      allow read: if canRead();
+      
+      // Only admins can create/update claims (immutable ledger)
+      allow create: if isAdmin();
+      
+      // Claims are immutable - no updates or deletes allowed
+      allow update, delete: if false;
+      
+      // Transactions subcollection
+      match /transactions/{transactionId} {
+        allow read: if canRead();
+        allow create: if isAdmin();
+        allow update, delete: if false; // Immutable
+      }
+    }
+    
+    // =========================================================================
+    // LEDGER EVENTS COLLECTION (Core immutable events)
+    // =========================================================================
+    
+    match /ledgerEvents/{eventId} {
+      allow read: if canRead();
+      
+      // Only system/admin can create events
+      allow create: if isAdmin();
+      
+      // Events are immutable - never update or delete
+      allow update, delete: if false;
+    }
+    
+    // =========================================================================
+    // ANOMALIES COLLECTION
+    // =========================================================================
+    
+    match /anomalies/{anomalyId} {
+      allow read: if canRead();
+      
+      // Only system/admin can create anomalies (AI-generated)
+      allow create: if isAdmin();
+      
+      // Anomalies can be updated (e.g., marked as reviewed)
+      allow update: if canWrite();
+      
+      // Only admin can delete
+      allow delete: if isAdmin();
+    }
+    
+    // =========================================================================
+    // FRAUD SCORES COLLECTION
+    // =========================================================================
+    
+    match /fraudScores/{scoreId} {
+      allow read: if canRead();
+      
+      // Only system/admin can create/update fraud scores
+      allow create, update: if isAdmin();
+      
+      // Never delete fraud scores (audit trail)
+      allow delete: if false;
+    }
+    
+    // =========================================================================
+    // ANNOTATIONS COLLECTION
+    // =========================================================================
+    
+    match /annotations/{annotationId} {
+      allow read: if canRead();
+      
+      // Admins and Auditors can create annotations
+      allow create: if canWrite() && 
+        request.resource.data.user == request.auth.token.email;
+      
+      // Users can only update their own annotations
+      allow update: if canWrite() && 
+        resource.data.user == request.auth.token.email;
+      
+      // Only admin can delete annotations
+      allow delete: if isAdmin();
+    }
+    
+    // =========================================================================
+    // COMPLIANCE VIOLATIONS COLLECTION
+    // =========================================================================
+    
+    match /complianceViolations/{violationId} {
+      allow read: if canRead();
+      
+      // Only system/admin can create violations
+      allow create: if isAdmin();
+      
+      // Violations can be updated (e.g., resolved)
+      allow update: if canWrite();
+      
+      // Never delete violations (audit trail)
+      allow delete: if false;
+    }
+    
+    // =========================================================================
+    // AUDIT LOG COLLECTION
+    // =========================================================================
+    
+    match /auditLog/{logId} {
+      // All authenticated users can read audit logs
+      allow read: if canRead();
+      
+      // Only system can create audit logs
+      allow create: if isAdmin();
+      
+      // Audit logs are immutable
+      allow update, delete: if false;
+    }
+    
+    // =========================================================================
+    // VERIFICATION PROOFS COLLECTION
+    // =========================================================================
+    
+    match /verificationProofs/{proofId} {
+      allow read: if canRead();
+      
+      // Only system can create proofs
+      allow create: if isAdmin();
+      
+      // Proofs are immutable
+      allow update, delete: if false;
+    }
+    
+    // =========================================================================
+    // API KEYS COLLECTION (Admin only)
+    // =========================================================================
+    
+    match /apiKeys/{keyId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // =========================================================================
+    // RISK ASSESSMENTS COLLECTION
+    // =========================================================================
+    
+    match /riskAssessments/{assessmentId} {
+      allow read: if canRead();
+      allow create: if isAdmin();
+      
+      // Allow human override updates
+      allow update: if canWrite();
+      
+      // Never delete assessments
+      allow delete: if false;
+    }
+  }
+}
