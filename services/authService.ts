@@ -1,9 +1,9 @@
 import { User, UserRole } from '../types';
 
 export const MOCK_USERS: User[] = [
-    { id: 'user-1', email: 'admin@claimsiq.proveniq.io', role: 'Administrator' },
-    { id: 'user-2', email: 'auditor@claimsiq.proveniq.io', role: 'Auditor' },
-    { id: 'user-3', email: 'viewer@claimsiq.proveniq.io', role: 'Viewer' },
+    { id: 'user-1', email: 'admin@proveniqledger.com', role: 'Administrator' },
+    { id: 'user-2', email: 'auditor@proveniqledger.com', role: 'Auditor' },
+    { id: 'user-3', email: 'viewer@proveniqledger.com', role: 'Viewer' },
 ];
 
 let currentUser: User = MOCK_USERS[1]; // Default to Auditor
