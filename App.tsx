@@ -5,6 +5,15 @@ import { detectAnomalies, calculateFraudScores } from './services/aiRiskAnalysis
 import { logAction } from './services/auditLogService';
 import { checkAllBlocksCompliance } from './services/complianceService';
 import { getCurrentUser, switchUser, MOCK_USERS } from './services/authService';
+import { 
+    getClaims, 
+    addClaim, 
+    getAnnotations, 
+    addAnnotation as addAnnotationToFirestore,
+    addAuditLogEntry,
+    seedInitialData,
+    hasExistingData 
+} from './services/firestoreService';
 
 import LandingScreen from './components/screens/LandingScreen';
 import LedgerScreen from './components/screens/LedgerScreen';
@@ -17,9 +26,11 @@ type AppView = 'landing' | 'ledger' | 'dashboard' | 'audit_trail';
 
 const App: React.FC = () => {
     const [view, setView] = useState<AppView>('landing');
-    const [ledger, setLedger] = useState<Block[]>(MOCK_LEDGER);
+    const [ledger, setLedger] = useState<Block[]>([]);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
     const [isLiveMode, setIsLiveMode] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [useFirestore, setUseFirestore] = useState(true);
 
     // New feature states
     const [currentUser, setCurrentUser] = useState<User>(getCurrentUser());
@@ -30,19 +41,60 @@ const App: React.FC = () => {
     const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    const handleLogAction = useCallback((action: string, details: string) => {
-        setAuditLog(prevLog => [...prevLog, logAction(action, details)]);
+    // Load data from Firestore on mount
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const hasData = await hasExistingData();
+                if (!hasData) {
+                    // Seed with mock data if Firestore is empty
+                    console.log('Seeding initial data to Firestore...');
+                    await seedInitialData(MOCK_LEDGER);
+                }
+                
+                // Load claims from Firestore
+                const claims = await getClaims();
+                setLedger(claims.length > 0 ? claims : MOCK_LEDGER);
+                
+                // Load annotations
+                const storedAnnotations = await getAnnotations();
+                setAnnotations(storedAnnotations);
+                
+                setUseFirestore(true);
+            } catch (error) {
+                console.warn('Firestore unavailable, using mock data:', error);
+                setLedger(MOCK_LEDGER);
+                setUseFirestore(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
     }, []);
+
+    const handleLogAction = useCallback(async (action: string, details: string) => {
+        const entry = logAction(action, details);
+        setAuditLog(prevLog => [...prevLog, entry]);
+        
+        // Also persist to Firestore if available
+        if (useFirestore) {
+            try {
+                await addAuditLogEntry({
+                    timestamp: entry.timestamp,
+                    user: currentUser.email,
+                    action: entry.action,
+                    details: entry.details
+                });
+            } catch (error) {
+                console.warn('Failed to persist audit log:', error);
+            }
+        }
+    }, [useFirestore, currentUser.email]);
 
     const handleSwitchUser = (userId: string) => {
         const newUser = switchUser(userId);
         setCurrentUser(newUser);
         handleLogAction('USER_SWITCH', `Session switched to user ${newUser.email} (${newUser.role}).`);
-    };
-
-    const enterPortal = () => {
-        setView('ledger');
-        handleLogAction('PORTAL_ENTERED', `User ${currentUser.email} entered the secure portal.`);
     };
 
     const selectBlock = (id: string) => {
@@ -51,7 +103,7 @@ const App: React.FC = () => {
     };
     const deselectBlock = () => setSelectedBlockId(null);
     
-    const addAnnotation = (transactionId: string, comment: string) => {
+    const addAnnotation = async (transactionId: string, comment: string) => {
         if (currentUser.role === 'Viewer') return; // Security check
         const newAnnotation: Annotation = {
             id: `AN-${Date.now()}`,
@@ -64,17 +116,34 @@ const App: React.FC = () => {
             ...prev,
             [transactionId]: [...(prev[transactionId] || []), newAnnotation]
         }));
+        
+        // Persist to Firestore
+        if (useFirestore) {
+            try {
+                await addAnnotationToFirestore(newAnnotation);
+            } catch (error) {
+                console.warn('Failed to persist annotation:', error);
+            }
+        }
+        
         handleLogAction('ANNOTATION_ADDED', `Added annotation to transaction ${transactionId}.`);
     };
 
-    const addNewBlock = useCallback(() => {
+    const addNewBlock = useCallback(async () => {
         setLedger(prevLedger => {
             const lastBlock = prevLedger[prevLedger.length - 1];
             const newBlock = getNextBlock(lastBlock, prevLedger);
-            // In a real app, you'd also run analysis on the new block here
+            
+            // Persist to Firestore asynchronously
+            if (useFirestore) {
+                addClaim(newBlock).catch(err => 
+                    console.warn('Failed to persist new block:', err)
+                );
+            }
+            
             return [...prevLedger, newBlock];
         });
-    }, []);
+    }, [useFirestore]);
 
     useEffect(() => {
         const runInitialAnalysis = async () => {
@@ -102,7 +171,6 @@ const App: React.FC = () => {
         runInitialAnalysis();
     }, [view, ledger, handleLogAction]);
 
-
     useEffect(() => {
         let intervalId: ReturnType<typeof setInterval> | null = null;
         if (isLiveMode) {
@@ -115,6 +183,22 @@ const App: React.FC = () => {
     }, [isLiveMode, addNewBlock]);
 
     const selectedBlock = ledger.find(block => block.id === selectedBlockId) || null;
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-electric-blue mx-auto mb-4"></div>
+                    <p className="text-slate-400">Loading ledger data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const enterPortal = () => {
+        setView('ledger');
+        handleLogAction('PORTAL_ENTERED', `User ${currentUser.email} entered the secure portal.`);
+    };
 
     if (view === 'landing') {
         return <LandingScreen onEnterPortal={enterPortal} />;
