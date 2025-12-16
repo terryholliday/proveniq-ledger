@@ -3,6 +3,8 @@ import { Block, Anomaly, FraudScore, ComplianceViolation, User } from '../../typ
 import { verifyLedger, VerificationResult } from '../../services/verificationService';
 import AIAssistant from '../AIAssistant';
 import ChainViewScreen from './ChainViewScreen';
+import IntegrationStatusPanel from '../IntegrationStatusPanel';
+import { useIntegrationLayer } from '../../hooks/useIntegrationLayer';
 
 // --- Icons ---
 const ClockIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg>;
@@ -115,6 +117,7 @@ interface LedgerScreenProps {
 }
 
 const LedgerScreen: React.FC<LedgerScreenProps> = ({ blocks, onSelectBlock, anomalies, fraudScores, complianceViolations, isAnalyzing, onLogAction, currentUser }) => {
+    const [integrationState, integrationActions] = useIntegrationLayer();
     const [searchTerm, setSearchTerm] = useState('');
     const [minTx, setMinTx] = useState('');
     const [maxTx, setMaxTx] = useState('');
@@ -185,6 +188,12 @@ const LedgerScreen: React.FC<LedgerScreenProps> = ({ blocks, onSelectBlock, anom
             )}
             
             <AIAssistant ledger={blocks} onLogAction={onLogAction} currentUser={currentUser} />
+
+            <IntegrationStatusPanel 
+                state={integrationState} 
+                actions={integrationActions} 
+                onLogAction={onLogAction} 
+            />
 
             <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
