@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 
-type AppView = 'ledger' | 'dashboard' | 'audit_trail';
+type AppView = 'ledger' | 'dashboard' | 'audit_trail' | 'insurance_demo';
 
 const ShieldCheckIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-electric-blue">
@@ -98,6 +98,12 @@ const Header: React.FC<HeaderProps> = ({ isLiveMode, setIsLiveMode, currentView,
                         <NavButton isActive={currentView === 'ledger'} onClick={() => setView('ledger')}>Ledger</NavButton>
                         <NavButton isActive={currentView === 'dashboard'} onClick={() => setView('dashboard')}>Dashboard</NavButton>
                         <NavButton isActive={currentView === 'audit_trail'} onClick={() => setView('audit_trail')}>Audit Trail</NavButton>
+                        <NavButton isActive={currentView === 'insurance_demo'} onClick={() => setView('insurance_demo')}>
+                            <span className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-electric-green animate-pulse"></span>
+                                Insurance Demo
+                            </span>
+                        </NavButton>
                     </nav>
 
                     <div className="flex items-center space-x-6">

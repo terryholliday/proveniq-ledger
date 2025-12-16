@@ -22,8 +22,9 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import DashboardScreen from './components/screens/DashboardScreen';
 import AuditTrailScreen from './components/screens/AuditTrailScreen';
+import InsuranceDemoScreen from './components/screens/InsuranceDemoScreen';
 
-type AppView = 'landing' | 'ledger' | 'dashboard' | 'audit_trail';
+type AppView = 'landing' | 'ledger' | 'dashboard' | 'audit_trail' | 'insurance_demo';
 
 const App: React.FC = () => {
     const [view, setView] = useState<AppView>('landing');
@@ -224,6 +225,8 @@ const App: React.FC = () => {
                 return <DashboardScreen blocks={ledger} onLogAction={handleLogAction} />;
             case 'audit_trail':
                 return <AuditTrailScreen log={auditLog} />;
+            case 'insurance_demo':
+                return <InsuranceDemoScreen />;
             case 'ledger':
             default:
                 return (
