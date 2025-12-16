@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import Footer from '../Footer';
 import LEDGER_DATA from '../../data/LEDGER_DATA.json';
 import SineWaveBackground from '../SineWaveBackground';
 
@@ -221,7 +222,7 @@ const LandingScreen: React.FC<{ onEnterPortal: () => void }> = ({ onEnterPortal 
             </div>
 
             {/* Security Classification Section */}
-            <div className="bg-slate-950 py-16 sm:py-24" id="security">
+            <div className="bg-slate-950/95 py-16 sm:py-24 pb-32 sm:pb-40" id="security">
                 <div className="max-w-7xl mx-auto px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-base font-semibold leading-7 text-electric-blue">Data Classification</h2>
@@ -232,38 +233,39 @@ const LandingScreen: React.FC<{ onEnterPortal: () => void }> = ({ onEnterPortal 
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
-                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-400">
+                        <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center shadow-lg">
+                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-300">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-semibold text-slate-100 mb-2">L1 General</h3>
-                            <p className="text-sm text-slate-400">Public or non-sensitive information that can be shared broadly.</p>
+                            <h3 className="text-lg font-semibold text-white mb-2">L1 General</h3>
+                            <p className="text-sm text-slate-300">Public or non-sensitive information that can be shared broadly.</p>
                         </div>
                         
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
-                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-amber-500">
+                        <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center shadow-lg">
+                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-amber-400">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-semibold text-slate-100 mb-2">L2 Sensitive</h3>
-                            <p className="text-sm text-slate-400">Internal data requiring controlled access and handling procedures.</p>
+                            <h3 className="text-lg font-semibold text-white mb-2">L2 Sensitive</h3>
+                            <p className="text-sm text-slate-300">Internal data requiring controlled access and handling procedures.</p>
                         </div>
                         
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
-                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-red-500">
+                        <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center shadow-lg">
+                            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-red-400">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-semibold text-slate-100 mb-2">L3 Trade Secret</h3>
-                            <p className="text-sm text-slate-400">Highly confidential proprietary information with strict access controls.</p>
+                            <h3 className="text-lg font-semibold text-white mb-2">L3 Trade Secret</h3>
+                            <p className="text-sm text-slate-300">Highly confidential proprietary information with strict access controls.</p>
                         </div>
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 };

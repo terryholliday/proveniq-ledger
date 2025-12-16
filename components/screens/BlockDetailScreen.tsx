@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Block, Annotation, ComplianceViolation, User } from '../../types';
 import { getAISummary } from '../../services/geminiService';
+import { CustodyService } from '../../services/custodyService';
+import type { CustodyState } from '../../types/integration';
 
 // --- Icons ---
 const UserCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z" clipRule="evenodd" /></svg>;
@@ -9,6 +11,63 @@ const ClipboardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
 const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>;
 const ExclamationTriangleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-red-400"><path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>;
 const SparklesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.39-3.453 3.348c-.646.626-.333 1.735.43 1.966l5.243 1.258 2.37.948 2.37-.948 5.243-1.258c.762-.232 1.075-1.34.43-1.966l-3.452-3.348-4.753-.39-1.83-4.401zM15 12a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" /></svg>;
+const TruckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.5 9a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM11 2a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H11zM5.5 9a.5.5 0 11-1 0 .5.5 0 011 0zm9.5.5a.5.5 0 100-1 .5.5 0 000 1z" /></svg>;
+
+const CUSTODY_STATE_CONFIG: Record<CustodyState, { label: string; color: string; bgColor: string }> = {
+  HOME: { label: 'At Home', color: 'text-blue-400', bgColor: 'bg-blue-900/30' },
+  IN_TRANSIT: { label: 'In Transit', color: 'text-yellow-400', bgColor: 'bg-yellow-900/30' },
+  VAULT: { label: 'In Vault', color: 'text-purple-400', bgColor: 'bg-purple-900/30' },
+  RETURNED: { label: 'Returned', color: 'text-slate-400', bgColor: 'bg-slate-800/50' },
+  SOLD: { label: 'Sold', color: 'text-electric-green', bgColor: 'bg-green-900/30' },
+};
+
+const CustodyStateBadge: React.FC<{ itemId?: string }> = ({ itemId }) => {
+  if (!itemId) return null;
+  
+  const record = CustodyService.getCustodyState(itemId);
+  const state = record?.currentState || 'HOME';
+  const config = CUSTODY_STATE_CONFIG[state];
+  const validTransitions = CustodyService.getValidTransitions(state);
+  
+  return (
+    <div className={`${config.bgColor} border border-slate-700 rounded-lg p-4`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-slate-400 mb-1">Custody State</p>
+          <div className="flex items-center gap-2">
+            <TruckIcon />
+            <span className={`font-semibold ${config.color}`}>{config.label}</span>
+          </div>
+        </div>
+        {validTransitions.length > 0 && (
+          <div className="text-right">
+            <p className="text-xs text-slate-500">Valid transitions:</p>
+            <p className="text-xs text-slate-400">
+              {validTransitions.map(t => CUSTODY_STATE_CONFIG[t].label).join(' → ')}
+            </p>
+          </div>
+        )}
+      </div>
+      {record?.transitionHistory && record.transitionHistory.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-700">
+          <p className="text-xs text-slate-500 mb-2">Recent History</p>
+          <div className="space-y-1">
+            {record.transitionHistory.slice(-3).map((t, i) => (
+              <div key={i} className="text-xs flex justify-between">
+                <span className="text-slate-400">
+                  {CUSTODY_STATE_CONFIG[t.from].label} → {CUSTODY_STATE_CONFIG[t.to].label}
+                </span>
+                <span className="text-slate-500">
+                  {new Date(t.timestamp).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const HashDisplay: React.FC<{ label: string; hash: string }> = ({ label, hash }) => {
     const [copied, setCopied] = useState(false);
@@ -139,6 +198,11 @@ const BlockDetailScreen: React.FC<BlockDetailScreenProps> = ({ block, onBack, an
                         <HashDisplay label="Digital Fingerprint (Hash)" hash={block.hash} />
                         <HashDisplay label="Chain Link (Previous Hash)" hash={block.previousHash} />
                     </div>
+                    {block.caseId && (
+                      <div className="mt-4">
+                        <CustodyStateBadge itemId={`item_${block.caseId.toLowerCase().replace(/[^a-z0-9]/g, '')}`} />
+                      </div>
+                    )}
                 </div>
 
                 {(isSummaryLoading || summary) && (

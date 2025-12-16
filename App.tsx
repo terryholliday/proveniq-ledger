@@ -19,6 +19,7 @@ import LandingScreen from './components/screens/LandingScreen';
 import LedgerScreen from './components/screens/LedgerScreen';
 import BlockDetailScreen from './components/screens/BlockDetailScreen';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import DashboardScreen from './components/screens/DashboardScreen';
 import AuditTrailScreen from './components/screens/AuditTrailScreen';
 
@@ -241,7 +242,7 @@ const App: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 font-sans">
+        <div className="min-h-screen bg-slate-950 font-sans flex flex-col">
             <Header
                 isLiveMode={isLiveMode}
                 setIsLiveMode={setIsLiveMode}
@@ -251,9 +252,10 @@ const App: React.FC = () => {
                 users={MOCK_USERS}
                 onSwitchUser={handleSwitchUser}
             />
-            <main className="pt-24 px-4 sm:px-6 lg:px-8">
+            <main className="pt-24 px-4 sm:px-6 lg:px-8 flex-grow">
                 {renderContent()}
             </main>
+            <Footer />
         </div>
     );
 };
