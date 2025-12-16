@@ -1,0 +1,12 @@
+{
+  "id": "strategic_partnerships_manager_p1",
+  "role": "strategic_partnerships_manager",
+  "phase": 1,
+  "phase_name": "Governance & Zero-Trust Architecture",
+  "artifacts_in": [],
+  "artifacts_out": [
+    "strategic_partnerships_manager_phase_1_deliverables_v1"
+  ],
+  "spec_hint": "strategic_partnerships_manager_phase_1.json",
+  "status": "PENDING"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "frontend_mobile_specialist_p4",
+  "role": "frontend_mobile_specialist",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "frontend_mobile_specialist_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "frontend_mobile_specialist_phase_4_deliverables_v1"
+  ],
+  "spec_hint": "frontend_mobile_specialist_phase_4.json",
+  "status": "PENDING"
+}

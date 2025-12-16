@@ -1,0 +1,15 @@
+{
+  "id": "qa_specialist_p4",
+  "role": "qa_specialist",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "qa_specialist_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "qa_specialist_phase_4_deliverables_v1",
+    "qa_security_drill_report_v1"
+  ],
+  "spec_hint": "qa_specialist_phase_4.json",
+  "status": "PENDING"
+}

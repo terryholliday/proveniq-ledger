@@ -1,0 +1,14 @@
+{
+  "id": "data_scientist_analytics_p4",
+  "role": "data_scientist_analytics",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "data_scientist_analytics_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "data_scientist_analytics_phase_4_deliverables_v1"
+  ],
+  "spec_hint": "data_scientist_analytics_phase_4.json",
+  "status": "PENDING"
+}

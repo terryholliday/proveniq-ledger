@@ -1,0 +1,14 @@
+{
+  "id": "product_owner_p5",
+  "role": "product_owner",
+  "phase": 5,
+  "phase_name": "Global Scale & Ecosystem Optimization",
+  "artifacts_in": [
+    "product_owner_phase_4_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "product_owner_phase_5_deliverables_v1"
+  ],
+  "spec_hint": "product_owner_phase_5.json",
+  "status": "PENDING"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "strategic_partnerships_manager_p3",
+  "role": "strategic_partnerships_manager",
+  "phase": 3,
+  "phase_name": "Integration Sandbox & Alpha Pilots",
+  "artifacts_in": [
+    "strategic_partnerships_manager_phase_2_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "strategic_partnerships_manager_phase_3_deliverables_v1"
+  ],
+  "spec_hint": "strategic_partnerships_manager_phase_3.json",
+  "status": "PENDING"
+}

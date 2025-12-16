@@ -1,0 +1,13 @@
+{
+  "id": "cto_p1",
+  "role": "cto",
+  "phase": 1,
+  "phase_name": "Governance & Zero-Trust Architecture",
+  "artifacts_in": [],
+  "artifacts_out": [
+    "cto_phase_1_deliverables_v1",
+    "cto_zero_trust_policy_v1"
+  ],
+  "spec_hint": "cto_phase_1.json",
+  "status": "PENDING"
+}

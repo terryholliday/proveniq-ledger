@@ -1,0 +1,49 @@
+{
+  "description": "Execution contract for running the Proveniq Ledger DAG in Windsurf/Antigravity.",
+  "node_status_values": [
+    "PENDING",
+    "READY",
+    "RUNNING",
+    "SUCCEEDED",
+    "FAILED",
+    "SKIPPED"
+  ],
+  "scheduling_rules": {
+    "ready_condition": "A node becomes READY when all its upstream dependencies have status SUCCEEDED.",
+    "concurrency": {
+      "max_global_parallel": 12,
+      "max_per_role": 2
+    },
+    "prioritization": [
+      "Phase 1 nodes before Phase 2 where possible",
+      "Security-critical roles (cto, lead_architect, compliance_officer, backend_devops_engineer, ai_safety_specialist, qa_specialist) have higher priority weights"
+    ]
+  },
+  "retry_policy": {
+    "max_retries": 3,
+    "backoff_strategy": "exponential",
+    "base_delay_seconds": 60,
+    "jitter": true,
+    "non_retryable_failure_hints": [
+      "Schema mismatch",
+      "Missing upstream artifact spec",
+      "Explicit human-gate-required flag"
+    ]
+  },
+  "artifact_protocol": {
+    "storage": "Git repo, object storage bucket, or Antigravity internal workspace",
+    "naming_convention": "<role>_phase_<n>_deliverables_v1.*",
+    "validation": "Nodes must verify presence of required artifacts_in before RUNNING."
+  },
+  "human_in_the_loop": {
+    "allow_human_gate": true,
+    "gate_points": [
+      "ceo_p1",
+      "cto_p1",
+      "lead_architect_p1",
+      "compliance_officer_p1",
+      "ceo_p5"
+    ],
+    "gate_behavior": "Node remains READY but cannot transition to RUNNING until human approval event is attached."
+  }
+}

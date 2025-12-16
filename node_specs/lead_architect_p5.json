@@ -1,0 +1,14 @@
+{
+  "id": "lead_architect_p5",
+  "role": "lead_architect",
+  "phase": 5,
+  "phase_name": "Global Scale & Ecosystem Optimization",
+  "artifacts_in": [
+    "lead_architect_phase_4_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "lead_architect_phase_5_deliverables_v1"
+  ],
+  "spec_hint": "lead_architect_phase_5.json",
+  "status": "PENDING"
+}

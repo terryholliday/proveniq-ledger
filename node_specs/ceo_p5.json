@@ -1,0 +1,14 @@
+{
+  "id": "ceo_p5",
+  "role": "ceo",
+  "phase": 5,
+  "phase_name": "Global Scale & Ecosystem Optimization",
+  "artifacts_in": [
+    "ceo_phase_4_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "ceo_phase_5_deliverables_v1"
+  ],
+  "spec_hint": "ceo_phase_5.json",
+  "status": "PENDING"
+}

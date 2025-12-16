@@ -1,0 +1,14 @@
+{
+  "id": "strategic_partnerships_manager_p4",
+  "role": "strategic_partnerships_manager",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "strategic_partnerships_manager_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "strategic_partnerships_manager_phase_4_deliverables_v1"
+  ],
+  "spec_hint": "strategic_partnerships_manager_phase_4.json",
+  "status": "PENDING"
+}

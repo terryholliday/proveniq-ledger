@@ -1,0 +1,14 @@
+{
+  "id": "qa_specialist_p5",
+  "role": "qa_specialist",
+  "phase": 5,
+  "phase_name": "Global Scale & Ecosystem Optimization",
+  "artifacts_in": [
+    "qa_specialist_phase_4_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "qa_specialist_phase_5_deliverables_v1"
+  ],
+  "spec_hint": "qa_specialist_phase_5.json",
+  "status": "PENDING"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "product_owner_p2",
+  "role": "product_owner",
+  "phase": 2,
+  "phase_name": "Core Infrastructure & 'Visual Truth' Engine",
+  "artifacts_in": [
+    "product_owner_phase_1_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "product_owner_phase_2_deliverables_v1"
+  ],
+  "spec_hint": "product_owner_phase_2.json",
+  "status": "PENDING"
+}

@@ -1,0 +1,740 @@
+description: Proveniq Ledger concurrent multi-stream DAG (roles x phases) with artifact IO
+model: B_concurrent_multistream
+nodes:
+  - id: ceo_p1
+    role: ceo
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['ceo_phase_1_deliverables_v1']
+  - id: ceo_p2
+    role: ceo
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['ceo_phase_1_deliverables_v1']
+    artifacts_out: ['ceo_phase_2_deliverables_v1']
+  - id: ceo_p3
+    role: ceo
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['ceo_phase_2_deliverables_v1']
+    artifacts_out: ['ceo_phase_3_deliverables_v1']
+  - id: ceo_p4
+    role: ceo
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['ceo_phase_3_deliverables_v1']
+    artifacts_out: ['ceo_phase_4_deliverables_v1']
+  - id: ceo_p5
+    role: ceo
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['ceo_phase_4_deliverables_v1']
+    artifacts_out: ['ceo_phase_5_deliverables_v1']
+  - id: cto_p1
+    role: cto
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['cto_phase_1_deliverables_v1', 'cto_zero_trust_policy_v1']
+  - id: cto_p2
+    role: cto
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['cto_phase_1_deliverables_v1']
+    artifacts_out: ['cto_phase_2_deliverables_v1']
+  - id: cto_p3
+    role: cto
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['cto_phase_2_deliverables_v1']
+    artifacts_out: ['cto_phase_3_deliverables_v1']
+  - id: cto_p4
+    role: cto
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['cto_phase_3_deliverables_v1']
+    artifacts_out: ['cto_phase_4_deliverables_v1']
+  - id: cto_p5
+    role: cto
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['cto_phase_4_deliverables_v1']
+    artifacts_out: ['cto_phase_5_deliverables_v1']
+  - id: lead_architect_p1
+    role: lead_architect
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['lead_architect_phase_1_deliverables_v1', 'lead_architect_data_residency_plan_v1']
+  - id: lead_architect_p2
+    role: lead_architect
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['lead_architect_phase_1_deliverables_v1']
+    artifacts_out: ['lead_architect_phase_2_deliverables_v1']
+  - id: lead_architect_p3
+    role: lead_architect
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['lead_architect_phase_2_deliverables_v1']
+    artifacts_out: ['lead_architect_phase_3_deliverables_v1']
+  - id: lead_architect_p4
+    role: lead_architect
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['lead_architect_phase_3_deliverables_v1']
+    artifacts_out: ['lead_architect_phase_4_deliverables_v1']
+  - id: lead_architect_p5
+    role: lead_architect
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['lead_architect_phase_4_deliverables_v1']
+    artifacts_out: ['lead_architect_phase_5_deliverables_v1']
+  - id: backend_devops_engineer_p1
+    role: backend_devops_engineer
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['backend_devops_engineer_phase_1_deliverables_v1']
+  - id: backend_devops_engineer_p2
+    role: backend_devops_engineer
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['backend_devops_engineer_phase_1_deliverables_v1', 'cto_zero_trust_policy_v1', 'lead_architect_data_residency_plan_v1', 'compliance_officer_compliance_matrix_v1']
+    artifacts_out: ['backend_devops_engineer_phase_2_deliverables_v1', 'ledger_infra_stack_alpha_v1']
+  - id: backend_devops_engineer_p3
+    role: backend_devops_engineer
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['backend_devops_engineer_phase_2_deliverables_v1']
+    artifacts_out: ['backend_devops_engineer_phase_3_deliverables_v1']
+  - id: backend_devops_engineer_p4
+    role: backend_devops_engineer
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['backend_devops_engineer_phase_3_deliverables_v1']
+    artifacts_out: ['backend_devops_engineer_phase_4_deliverables_v1']
+  - id: backend_devops_engineer_p5
+    role: backend_devops_engineer
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['backend_devops_engineer_phase_4_deliverables_v1']
+    artifacts_out: ['backend_devops_engineer_phase_5_deliverables_v1']
+  - id: product_owner_p1
+    role: product_owner
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['product_owner_phase_1_deliverables_v1', 'product_owner_ledger_charter_v1']
+  - id: product_owner_p2
+    role: product_owner
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['product_owner_phase_1_deliverables_v1']
+    artifacts_out: ['product_owner_phase_2_deliverables_v1']
+  - id: product_owner_p3
+    role: product_owner
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['product_owner_phase_2_deliverables_v1']
+    artifacts_out: ['product_owner_phase_3_deliverables_v1']
+  - id: product_owner_p4
+    role: product_owner
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['product_owner_phase_3_deliverables_v1']
+    artifacts_out: ['product_owner_phase_4_deliverables_v1']
+  - id: product_owner_p5
+    role: product_owner
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['product_owner_phase_4_deliverables_v1']
+    artifacts_out: ['product_owner_phase_5_deliverables_v1']
+  - id: solutions_engineer_p1
+    role: solutions_engineer
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['solutions_engineer_phase_1_deliverables_v1']
+  - id: solutions_engineer_p2
+    role: solutions_engineer
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['solutions_engineer_phase_1_deliverables_v1']
+    artifacts_out: ['solutions_engineer_phase_2_deliverables_v1']
+  - id: solutions_engineer_p3
+    role: solutions_engineer
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['solutions_engineer_phase_2_deliverables_v1']
+    artifacts_out: ['solutions_engineer_phase_3_deliverables_v1', 'partner_sandbox_blueprint_v1']
+  - id: solutions_engineer_p4
+    role: solutions_engineer
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['solutions_engineer_phase_3_deliverables_v1']
+    artifacts_out: ['solutions_engineer_phase_4_deliverables_v1']
+  - id: solutions_engineer_p5
+    role: solutions_engineer
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['solutions_engineer_phase_4_deliverables_v1']
+    artifacts_out: ['solutions_engineer_phase_5_deliverables_v1']
+  - id: compliance_officer_p1
+    role: compliance_officer
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['compliance_officer_phase_1_deliverables_v1', 'compliance_officer_compliance_matrix_v1']
+  - id: compliance_officer_p2
+    role: compliance_officer
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['compliance_officer_phase_1_deliverables_v1']
+    artifacts_out: ['compliance_officer_phase_2_deliverables_v1']
+  - id: compliance_officer_p3
+    role: compliance_officer
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['compliance_officer_phase_2_deliverables_v1']
+    artifacts_out: ['compliance_officer_phase_3_deliverables_v1']
+  - id: compliance_officer_p4
+    role: compliance_officer
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['compliance_officer_phase_3_deliverables_v1']
+    artifacts_out: ['compliance_officer_phase_4_deliverables_v1']
+  - id: compliance_officer_p5
+    role: compliance_officer
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['compliance_officer_phase_4_deliverables_v1']
+    artifacts_out: ['compliance_officer_phase_5_deliverables_v1']
+  - id: qa_specialist_p1
+    role: qa_specialist
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['qa_specialist_phase_1_deliverables_v1']
+  - id: qa_specialist_p2
+    role: qa_specialist
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['qa_specialist_phase_1_deliverables_v1']
+    artifacts_out: ['qa_specialist_phase_2_deliverables_v1']
+  - id: qa_specialist_p3
+    role: qa_specialist
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['qa_specialist_phase_2_deliverables_v1']
+    artifacts_out: ['qa_specialist_phase_3_deliverables_v1']
+  - id: qa_specialist_p4
+    role: qa_specialist
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['qa_specialist_phase_3_deliverables_v1']
+    artifacts_out: ['qa_specialist_phase_4_deliverables_v1', 'qa_security_drill_report_v1']
+  - id: qa_specialist_p5
+    role: qa_specialist
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['qa_specialist_phase_4_deliverables_v1']
+    artifacts_out: ['qa_specialist_phase_5_deliverables_v1']
+  - id: frontend_mobile_specialist_p1
+    role: frontend_mobile_specialist
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['frontend_mobile_specialist_phase_1_deliverables_v1']
+  - id: frontend_mobile_specialist_p2
+    role: frontend_mobile_specialist
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['frontend_mobile_specialist_phase_1_deliverables_v1']
+    artifacts_out: ['frontend_mobile_specialist_phase_2_deliverables_v1']
+  - id: frontend_mobile_specialist_p3
+    role: frontend_mobile_specialist
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['frontend_mobile_specialist_phase_2_deliverables_v1']
+    artifacts_out: ['frontend_mobile_specialist_phase_3_deliverables_v1']
+  - id: frontend_mobile_specialist_p4
+    role: frontend_mobile_specialist
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['frontend_mobile_specialist_phase_3_deliverables_v1']
+    artifacts_out: ['frontend_mobile_specialist_phase_4_deliverables_v1']
+  - id: frontend_mobile_specialist_p5
+    role: frontend_mobile_specialist
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['frontend_mobile_specialist_phase_4_deliverables_v1']
+    artifacts_out: ['frontend_mobile_specialist_phase_5_deliverables_v1']
+  - id: ai_safety_specialist_p1
+    role: ai_safety_specialist
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['ai_safety_specialist_phase_1_deliverables_v1']
+  - id: ai_safety_specialist_p2
+    role: ai_safety_specialist
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['ai_safety_specialist_phase_1_deliverables_v1']
+    artifacts_out: ['ai_safety_specialist_phase_2_deliverables_v1']
+  - id: ai_safety_specialist_p3
+    role: ai_safety_specialist
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['ai_safety_specialist_phase_2_deliverables_v1']
+    artifacts_out: ['ai_safety_specialist_phase_3_deliverables_v1']
+  - id: ai_safety_specialist_p4
+    role: ai_safety_specialist
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['ai_safety_specialist_phase_3_deliverables_v1']
+    artifacts_out: ['ai_safety_specialist_phase_4_deliverables_v1']
+  - id: ai_safety_specialist_p5
+    role: ai_safety_specialist
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['ai_safety_specialist_phase_4_deliverables_v1']
+    artifacts_out: ['ai_safety_specialist_phase_5_deliverables_v1']
+  - id: data_scientist_analytics_p1
+    role: data_scientist_analytics
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['data_scientist_analytics_phase_1_deliverables_v1']
+  - id: data_scientist_analytics_p2
+    role: data_scientist_analytics
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['data_scientist_analytics_phase_1_deliverables_v1']
+    artifacts_out: ['data_scientist_analytics_phase_2_deliverables_v1']
+  - id: data_scientist_analytics_p3
+    role: data_scientist_analytics
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['data_scientist_analytics_phase_2_deliverables_v1']
+    artifacts_out: ['data_scientist_analytics_phase_3_deliverables_v1']
+  - id: data_scientist_analytics_p4
+    role: data_scientist_analytics
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['data_scientist_analytics_phase_3_deliverables_v1']
+    artifacts_out: ['data_scientist_analytics_phase_4_deliverables_v1']
+  - id: data_scientist_analytics_p5
+    role: data_scientist_analytics
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['data_scientist_analytics_phase_4_deliverables_v1']
+    artifacts_out: ['data_scientist_analytics_phase_5_deliverables_v1', 'analytics_industry_insights_pack_v1']
+  - id: strategic_partnerships_manager_p1
+    role: strategic_partnerships_manager
+    phase: 1
+    phase_name: "Governance & Zero-Trust Architecture"
+    artifacts_in: []
+    artifacts_out: ['strategic_partnerships_manager_phase_1_deliverables_v1']
+  - id: strategic_partnerships_manager_p2
+    role: strategic_partnerships_manager
+    phase: 2
+    phase_name: "Core Infrastructure & 'Visual Truth' Engine"
+    artifacts_in: ['strategic_partnerships_manager_phase_1_deliverables_v1']
+    artifacts_out: ['strategic_partnerships_manager_phase_2_deliverables_v1']
+  - id: strategic_partnerships_manager_p3
+    role: strategic_partnerships_manager
+    phase: 3
+    phase_name: "Integration Sandbox & Alpha Pilots"
+    artifacts_in: ['strategic_partnerships_manager_phase_2_deliverables_v1']
+    artifacts_out: ['strategic_partnerships_manager_phase_3_deliverables_v1']
+  - id: strategic_partnerships_manager_p4
+    role: strategic_partnerships_manager
+    phase: 4
+    phase_name: "Security Hardening & Beta Certification"
+    artifacts_in: ['strategic_partnerships_manager_phase_3_deliverables_v1']
+    artifacts_out: ['strategic_partnerships_manager_phase_4_deliverables_v1']
+  - id: strategic_partnerships_manager_p5
+    role: strategic_partnerships_manager
+    phase: 5
+    phase_name: "Global Scale & Ecosystem Optimization"
+    artifacts_in: ['strategic_partnerships_manager_phase_4_deliverables_v1']
+    artifacts_out: ['strategic_partnerships_manager_phase_5_deliverables_v1', 'developer_marketplace_launch_pack_v1']
+edges:
+  - from: ceo_p1
+    to: ceo_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: ceo_p2
+    to: ceo_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: ceo_p3
+    to: ceo_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: ceo_p4
+    to: ceo_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: cto_p1
+    to: cto_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: cto_p2
+    to: cto_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: cto_p3
+    to: cto_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: cto_p4
+    to: cto_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: lead_architect_p1
+    to: lead_architect_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: lead_architect_p2
+    to: lead_architect_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: lead_architect_p3
+    to: lead_architect_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: lead_architect_p4
+    to: lead_architect_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: backend_devops_engineer_p1
+    to: backend_devops_engineer_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: backend_devops_engineer_p2
+    to: backend_devops_engineer_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: backend_devops_engineer_p3
+    to: backend_devops_engineer_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: backend_devops_engineer_p4
+    to: backend_devops_engineer_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: product_owner_p1
+    to: product_owner_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: product_owner_p2
+    to: product_owner_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: product_owner_p3
+    to: product_owner_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: product_owner_p4
+    to: product_owner_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: solutions_engineer_p1
+    to: solutions_engineer_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: solutions_engineer_p2
+    to: solutions_engineer_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: solutions_engineer_p3
+    to: solutions_engineer_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: solutions_engineer_p4
+    to: solutions_engineer_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: compliance_officer_p1
+    to: compliance_officer_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: compliance_officer_p2
+    to: compliance_officer_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: compliance_officer_p3
+    to: compliance_officer_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: compliance_officer_p4
+    to: compliance_officer_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: qa_specialist_p1
+    to: qa_specialist_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: qa_specialist_p2
+    to: qa_specialist_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: qa_specialist_p3
+    to: qa_specialist_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: qa_specialist_p4
+    to: qa_specialist_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: frontend_mobile_specialist_p1
+    to: frontend_mobile_specialist_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: frontend_mobile_specialist_p2
+    to: frontend_mobile_specialist_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: frontend_mobile_specialist_p3
+    to: frontend_mobile_specialist_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: frontend_mobile_specialist_p4
+    to: frontend_mobile_specialist_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: ai_safety_specialist_p1
+    to: ai_safety_specialist_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: ai_safety_specialist_p2
+    to: ai_safety_specialist_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: ai_safety_specialist_p3
+    to: ai_safety_specialist_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: ai_safety_specialist_p4
+    to: ai_safety_specialist_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: data_scientist_analytics_p1
+    to: data_scientist_analytics_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: data_scientist_analytics_p2
+    to: data_scientist_analytics_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: data_scientist_analytics_p3
+    to: data_scientist_analytics_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: data_scientist_analytics_p4
+    to: data_scientist_analytics_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: strategic_partnerships_manager_p1
+    to: strategic_partnerships_manager_p2
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: strategic_partnerships_manager_p2
+    to: strategic_partnerships_manager_p3
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: strategic_partnerships_manager_p3
+    to: strategic_partnerships_manager_p4
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: strategic_partnerships_manager_p4
+    to: strategic_partnerships_manager_p5
+    type: intra_role
+    reason: "Next phase for same role"
+  - from: cto_p1
+    to: backend_devops_engineer_p2
+    type: cross_role
+    reason: "Zero-trust policy required before infra build"
+  - from: lead_architect_p1
+    to: backend_devops_engineer_p2
+    type: cross_role
+    reason: "Region and data topology needed for infra"
+  - from: compliance_officer_p1
+    to: backend_devops_engineer_p2
+    type: cross_role
+    reason: "Compliance constraints must shape infra"
+  - from: lead_architect_p1
+    to: data_scientist_analytics_p2
+    type: cross_role
+    reason: "Schemas must support analytics"
+  - from: ai_safety_specialist_p1
+    to: data_scientist_analytics_p2
+    type: cross_role
+    reason: "Safety constraints inform analytics design"
+  - from: compliance_officer_p1
+    to: data_scientist_analytics_p2
+    type: cross_role
+    reason: "Analytics must respect privacy regs"
+  - from: lead_architect_p1
+    to: ai_safety_specialist_p2
+    type: cross_role
+    reason: "Event structures drive model inputs/outputs"
+  - from: compliance_officer_p1
+    to: ai_safety_specialist_p2
+    type: cross_role
+    reason: "Regulatory framing for AI safety"
+  - from: strategic_partnerships_manager_p1
+    to: product_owner_p2
+    type: cross_role
+    reason: "Partner segments influence MVP scope"
+  - from: product_owner_p1
+    to: product_owner_p2
+    type: cross_role
+    reason: "Charter must exist before MVP freeze"
+  - from: cto_p1
+    to: solutions_engineer_p2
+    type: cross_role
+    reason: "API/security direction informs integration patterns"
+  - from: cto_p1
+    to: frontend_mobile_specialist_p2
+    type: cross_role
+    reason: "Auth and API schemes shape portal/SDK"
+  - from: cto_p1
+    to: qa_specialist_p2
+    type: cross_role
+    reason: "Security & quality bars define test strategy"
+  - from: lead_architect_p1
+    to: qa_specialist_p2
+    type: cross_role
+    reason: "Architecture defines critical paths to test"
+  - from: compliance_officer_p1
+    to: qa_specialist_p2
+    type: cross_role
+    reason: "Compliance needs define test evidence"
+  - from: compliance_officer_p1
+    to: compliance_officer_p2
+    type: cross_role
+    reason: "Apply matrix to infra and schemas"
+  - from: solutions_engineer_p1
+    to: solutions_engineer_p2
+    type: cross_role
+    reason: "Early integration concepts drive API validation"
+  - from: frontend_mobile_specialist_p1
+    to: frontend_mobile_specialist_p2
+    type: cross_role
+    reason: "Initial UX constraints refine API needs"
+  - from: qa_specialist_p1
+    to: qa_specialist_p2
+    type: cross_role
+    reason: "Strategy in P1 → concrete suites in P2"
+  - from: data_scientist_analytics_p1
+    to: data_scientist_analytics_p2
+    type: cross_role
+    reason: "Analytics blueprint in P1 → schema review in P2"
+  - from: strategic_partnerships_manager_p1
+    to: strategic_partnerships_manager_p2
+    type: cross_role
+    reason: "Segmentation in P1 → mapped use cases in P2"
+  - from: backend_devops_engineer_p2
+    to: solutions_engineer_p3
+    type: cross_role
+    reason: "Sandbox and APIs must exist for partners"
+  - from: cto_p2
+    to: solutions_engineer_p3
+    type: cross_role
+    reason: "API v0.1 contract required"
+  - from: lead_architect_p2
+    to: solutions_engineer_p3
+    type: cross_role
+    reason: "Event and proof model define integration patterns"
+  - from: compliance_officer_p2
+    to: solutions_engineer_p3
+    type: cross_role
+    reason: "Sandbox must enforce compliance rules"
+  - from: backend_devops_engineer_p2
+    to: frontend_mobile_specialist_p3
+    type: cross_role
+    reason: "Portal must sit atop live sandbox APIs"
+  - from: cto_p2
+    to: frontend_mobile_specialist_p3
+    type: cross_role
+    reason: "Auth and key management flows must be defined"
+  - from: product_owner_p2
+    to: frontend_mobile_specialist_p3
+    type: cross_role
+    reason: "Portal scope must align with MVP endpoints"
+  - from: cto_p2
+    to: qa_specialist_p3
+    type: cross_role
+    reason: "Finalized API surface to test"
+  - from: backend_devops_engineer_p2
+    to: qa_specialist_p3
+    type: cross_role
+    reason: "Running infra is needed for integration tests"
+  - from: lead_architect_p2
+    to: qa_specialist_p3
+    type: cross_role
+    reason: "Event pipeline logic shapes end-to-end tests"
+  - from: strategic_partnerships_manager_p2
+    to: strategic_partnerships_manager_p3
+    type: cross_role
+    reason: "Mapped use cases → LOIs and pilots"
+  - from: solutions_engineer_p2
+    to: strategic_partnerships_manager_p3
+    type: cross_role
+    reason: "Integration feasibility informs pilot design"
+  - from: product_owner_p2
+    to: strategic_partnerships_manager_p3
+    type: cross_role
+    reason: "MVP scope bounds pilot promises"
+  - from: ai_safety_specialist_p2
+    to: ai_safety_specialist_p3
+    type: cross_role
+    reason: "Baseline models → sandbox safety policies"
+  - from: data_scientist_analytics_p2
+    to: data_scientist_analytics_p3
+    type: cross_role
+    reason: "Analytics-ready schema → sandbox analytics extracts"
+  - from: qa_specialist_p3
+    to: qa_specialist_p4
+    type: cross_role
+    reason: "Sandbox tests → full pen tests and DR drills"
+  - from: ai_safety_specialist_p3
+    to: ai_safety_specialist_p4
+    type: cross_role
+    reason: "Sandbox AI behavior → formal red-teaming"
+  - from: backend_devops_engineer_p3
+    to: lead_architect_p4
+    type: cross_role
+    reason: "Real traffic informs WAF and edge hardening"
+  - from: cto_p3
+    to: lead_architect_p4
+    type: cross_role
+    reason: "Security findings guide architecture defenses"
+  - from: compliance_officer_p3
+    to: compliance_officer_p4
+    type: cross_role
+    reason: "Pilot controls → SOC2 evidence and certification work"
+  - from: solutions_engineer_p3
+    to: strategic_partnerships_manager_p4
+    type: cross_role
+    reason: "Pilot integration learnings → beta contract terms"
+  - from: product_owner_p3
+    to: strategic_partnerships_manager_p4
+    type: cross_role
+    reason: "Feature behaviors in alpha → beta SLAs"
+  - from: data_scientist_analytics_p4
+    to: data_scientist_analytics_p5
+    type: cross_role
+    reason: "Validated pipelines → monetized insights"
+  - from: strategic_partnerships_manager_p4
+    to: strategic_partnerships_manager_p5
+    type: cross_role
+    reason: "Beta partners → full ecosystem and marketplace"
+  - from: ceo_p4
+    to: ceo_p5
+    type: cross_role
+    reason: "Beta metrics → Series B and global expansion strategy"

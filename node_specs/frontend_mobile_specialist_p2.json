@@ -1,0 +1,14 @@
+{
+  "id": "frontend_mobile_specialist_p2",
+  "role": "frontend_mobile_specialist",
+  "phase": 2,
+  "phase_name": "Core Infrastructure & 'Visual Truth' Engine",
+  "artifacts_in": [
+    "frontend_mobile_specialist_phase_1_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "frontend_mobile_specialist_phase_2_deliverables_v1"
+  ],
+  "spec_hint": "frontend_mobile_specialist_phase_2.json",
+  "status": "PENDING"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "frontend_mobile_specialist_p5",
+  "role": "frontend_mobile_specialist",
+  "phase": 5,
+  "phase_name": "Global Scale & Ecosystem Optimization",
+  "artifacts_in": [
+    "frontend_mobile_specialist_phase_4_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "frontend_mobile_specialist_phase_5_deliverables_v1"
+  ],
+  "spec_hint": "frontend_mobile_specialist_phase_5.json",
+  "status": "PENDING"
+}

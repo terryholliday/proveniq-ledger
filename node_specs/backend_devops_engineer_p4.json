@@ -1,0 +1,14 @@
+{
+  "id": "backend_devops_engineer_p4",
+  "role": "backend_devops_engineer",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "backend_devops_engineer_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "backend_devops_engineer_phase_4_deliverables_v1"
+  ],
+  "spec_hint": "backend_devops_engineer_phase_4.json",
+  "status": "PENDING"
+}

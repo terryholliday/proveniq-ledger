@@ -1,0 +1,15 @@
+{
+  "id": "strategic_partnerships_manager_p5",
+  "role": "strategic_partnerships_manager",
+  "phase": 5,
+  "phase_name": "Global Scale & Ecosystem Optimization",
+  "artifacts_in": [
+    "strategic_partnerships_manager_phase_4_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "strategic_partnerships_manager_phase_5_deliverables_v1",
+    "developer_marketplace_launch_pack_v1"
+  ],
+  "spec_hint": "strategic_partnerships_manager_phase_5.json",
+  "status": "PENDING"
+}

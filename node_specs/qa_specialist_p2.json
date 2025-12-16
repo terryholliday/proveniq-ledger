@@ -1,0 +1,14 @@
+{
+  "id": "qa_specialist_p2",
+  "role": "qa_specialist",
+  "phase": 2,
+  "phase_name": "Core Infrastructure & 'Visual Truth' Engine",
+  "artifacts_in": [
+    "qa_specialist_phase_1_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "qa_specialist_phase_2_deliverables_v1"
+  ],
+  "spec_hint": "qa_specialist_phase_2.json",
+  "status": "PENDING"
+}

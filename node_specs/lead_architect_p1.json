@@ -1,0 +1,13 @@
+{
+  "id": "lead_architect_p1",
+  "role": "lead_architect",
+  "phase": 1,
+  "phase_name": "Governance & Zero-Trust Architecture",
+  "artifacts_in": [],
+  "artifacts_out": [
+    "lead_architect_phase_1_deliverables_v1",
+    "lead_architect_data_residency_plan_v1"
+  ],
+  "spec_hint": "lead_architect_phase_1.json",
+  "status": "PENDING"
+}

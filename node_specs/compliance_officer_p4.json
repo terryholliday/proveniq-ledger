@@ -1,0 +1,14 @@
+{
+  "id": "compliance_officer_p4",
+  "role": "compliance_officer",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "compliance_officer_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "compliance_officer_phase_4_deliverables_v1"
+  ],
+  "spec_hint": "compliance_officer_phase_4.json",
+  "status": "PENDING"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "qa_specialist_p3",
+  "role": "qa_specialist",
+  "phase": 3,
+  "phase_name": "Integration Sandbox & Alpha Pilots",
+  "artifacts_in": [
+    "qa_specialist_phase_2_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "qa_specialist_phase_3_deliverables_v1"
+  ],
+  "spec_hint": "qa_specialist_phase_3.json",
+  "status": "PENDING"
+}

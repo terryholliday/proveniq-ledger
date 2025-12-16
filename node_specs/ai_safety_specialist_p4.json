@@ -1,0 +1,14 @@
+{
+  "id": "ai_safety_specialist_p4",
+  "role": "ai_safety_specialist",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "ai_safety_specialist_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "ai_safety_specialist_phase_4_deliverables_v1"
+  ],
+  "spec_hint": "ai_safety_specialist_phase_4.json",
+  "status": "PENDING"
+}

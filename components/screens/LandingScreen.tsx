@@ -105,7 +105,7 @@ const LandingScreen: React.FC<{ onEnterPortal: () => void }> = ({ onEnterPortal 
                                 {activeSlide === index && (
                                     <div className="animate-zoomIn flex flex-col items-center">
                                         {icons[slide.icon as keyof typeof icons]}
-                                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-200 mt-4 leading-tight">
+                                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mt-4 leading-tight">
                                           {slide.lines.map((line, i) => (
                                               <span key={i} className="block">{line}</span>
                                           ))}

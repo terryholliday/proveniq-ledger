@@ -1,0 +1,14 @@
+{
+  "id": "data_scientist_analytics_p2",
+  "role": "data_scientist_analytics",
+  "phase": 2,
+  "phase_name": "Core Infrastructure & 'Visual Truth' Engine",
+  "artifacts_in": [
+    "data_scientist_analytics_phase_1_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "data_scientist_analytics_phase_2_deliverables_v1"
+  ],
+  "spec_hint": "data_scientist_analytics_phase_2.json",
+  "status": "PENDING"
+}

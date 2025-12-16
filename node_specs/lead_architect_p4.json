@@ -1,0 +1,14 @@
+{
+  "id": "lead_architect_p4",
+  "role": "lead_architect",
+  "phase": 4,
+  "phase_name": "Security Hardening & Beta Certification",
+  "artifacts_in": [
+    "lead_architect_phase_3_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "lead_architect_phase_4_deliverables_v1"
+  ],
+  "spec_hint": "lead_architect_phase_4.json",
+  "status": "PENDING"
+}

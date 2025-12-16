@@ -1,0 +1,14 @@
+{
+  "id": "frontend_mobile_specialist_p3",
+  "role": "frontend_mobile_specialist",
+  "phase": 3,
+  "phase_name": "Integration Sandbox & Alpha Pilots",
+  "artifacts_in": [
+    "frontend_mobile_specialist_phase_2_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "frontend_mobile_specialist_phase_3_deliverables_v1"
+  ],
+  "spec_hint": "frontend_mobile_specialist_phase_3.json",
+  "status": "PENDING"
+}

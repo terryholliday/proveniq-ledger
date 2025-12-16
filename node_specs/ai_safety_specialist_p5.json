@@ -1,0 +1,14 @@
+{
+  "id": "ai_safety_specialist_p5",
+  "role": "ai_safety_specialist",
+  "phase": 5,
+  "phase_name": "Global Scale & Ecosystem Optimization",
+  "artifacts_in": [
+    "ai_safety_specialist_phase_4_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "ai_safety_specialist_phase_5_deliverables_v1"
+  ],
+  "spec_hint": "ai_safety_specialist_phase_5.json",
+  "status": "PENDING"
+}

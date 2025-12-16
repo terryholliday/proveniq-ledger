@@ -1,0 +1,14 @@
+{
+  "id": "lead_architect_p3",
+  "role": "lead_architect",
+  "phase": 3,
+  "phase_name": "Integration Sandbox & Alpha Pilots",
+  "artifacts_in": [
+    "lead_architect_phase_2_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "lead_architect_phase_3_deliverables_v1"
+  ],
+  "spec_hint": "lead_architect_phase_3.json",
+  "status": "PENDING"
+}

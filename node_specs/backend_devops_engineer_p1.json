@@ -1,0 +1,12 @@
+{
+  "id": "backend_devops_engineer_p1",
+  "role": "backend_devops_engineer",
+  "phase": 1,
+  "phase_name": "Governance & Zero-Trust Architecture",
+  "artifacts_in": [],
+  "artifacts_out": [
+    "backend_devops_engineer_phase_1_deliverables_v1"
+  ],
+  "spec_hint": "backend_devops_engineer_phase_1.json",
+  "status": "PENDING"
+}

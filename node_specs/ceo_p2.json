@@ -1,0 +1,14 @@
+{
+  "id": "ceo_p2",
+  "role": "ceo",
+  "phase": 2,
+  "phase_name": "Core Infrastructure & 'Visual Truth' Engine",
+  "artifacts_in": [
+    "ceo_phase_1_deliverables_v1"
+  ],
+  "artifacts_out": [
+    "ceo_phase_2_deliverables_v1"
+  ],
+  "spec_hint": "ceo_phase_2.json",
+  "status": "PENDING"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "ceo_p1",
+  "role": "ceo",
+  "phase": 1,
+  "phase_name": "Governance & Zero-Trust Architecture",
+  "artifacts_in": [],
+  "artifacts_out": [
+    "ceo_phase_1_deliverables_v1"
+  ],
+  "spec_hint": "ceo_phase_1.json",
+  "status": "PENDING"
+}

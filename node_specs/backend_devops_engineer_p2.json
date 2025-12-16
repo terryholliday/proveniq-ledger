@@ -1,0 +1,18 @@
+{
+  "id": "backend_devops_engineer_p2",
+  "role": "backend_devops_engineer",
+  "phase": 2,
+  "phase_name": "Core Infrastructure & 'Visual Truth' Engine",
+  "artifacts_in": [
+    "backend_devops_engineer_phase_1_deliverables_v1",
+    "cto_zero_trust_policy_v1",
+    "lead_architect_data_residency_plan_v1",
+    "compliance_officer_compliance_matrix_v1"
+  ],
+  "artifacts_out": [
+    "backend_devops_engineer_phase_2_deliverables_v1",
+    "ledger_infra_stack_alpha_v1"
+  ],
+  "spec_hint": "backend_devops_engineer_phase_2.json",
+  "status": "PENDING"
+}
