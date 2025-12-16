@@ -23,8 +23,11 @@ import Footer from './components/Footer';
 import DashboardScreen from './components/screens/DashboardScreen';
 import AuditTrailScreen from './components/screens/AuditTrailScreen';
 import InsuranceDemoScreen from './components/screens/InsuranceDemoScreen';
+import ExecutiveDemoScreen from './components/screens/ExecutiveDemoScreen';
+import EcosystemDemoScreen from './components/screens/EcosystemDemoScreen';
+import LiveEcosystemDemo from './components/screens/LiveEcosystemDemo';
 
-type AppView = 'landing' | 'ledger' | 'dashboard' | 'audit_trail' | 'insurance_demo';
+type AppView = 'landing' | 'ledger' | 'dashboard' | 'audit_trail' | 'insurance_demo' | 'executive_demo' | 'ecosystem_demo' | 'live_demo';
 
 const App: React.FC = () => {
     const [view, setView] = useState<AppView>('landing');
@@ -227,6 +230,12 @@ const App: React.FC = () => {
                 return <AuditTrailScreen log={auditLog} />;
             case 'insurance_demo':
                 return <InsuranceDemoScreen />;
+            case 'executive_demo':
+                return <ExecutiveDemoScreen />;
+            case 'ecosystem_demo':
+                return <EcosystemDemoScreen />;
+            case 'live_demo':
+                return <LiveEcosystemDemo />;
             case 'ledger':
             default:
                 return (
