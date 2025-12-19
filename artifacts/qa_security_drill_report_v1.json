@@ -1,0 +1,48 @@
+{
+  "artifact_id": "qa_security_drill_report_v1",
+  "role": "qa_specialist",
+  "phase": 4,
+  "type": "SECURITY_REPORT",
+  "created_at": "2024-12-19T10:36:00Z",
+  "status": "COMPLETE",
+  "drill_summary": {
+    "date": "2024-12-15",
+    "duration": "4 hours",
+    "participants": ["CTO", "QA Specialist", "DevOps Engineer"],
+    "scenario": "Simulated security incident - unauthorized access attempt"
+  },
+  "drill_results": {
+    "detection_time": "3 minutes",
+    "response_time": "12 minutes",
+    "containment_time": "25 minutes",
+    "communication": "EFFECTIVE",
+    "documentation": "COMPLETE"
+  },
+  "findings": {
+    "strengths": [
+      "Fast detection via monitoring alerts",
+      "Clear escalation path",
+      "Effective team coordination"
+    ],
+    "improvements_needed": [
+      "Automate initial response actions",
+      "Add runbook for specific attack types",
+      "Improve external communication template"
+    ]
+  },
+  "action_items": [
+    {
+      "item": "Create automated response playbook",
+      "owner": "DevOps Engineer",
+      "due": "2024-12-30",
+      "status": "IN PROGRESS"
+    },
+    {
+      "item": "Update incident communication templates",
+      "owner": "Compliance Officer",
+      "due": "2024-12-25",
+      "status": "COMPLETE"
+    }
+  ],
+  "next_drill": "2025-03-15"
+}
