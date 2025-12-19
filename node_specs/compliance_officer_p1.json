@@ -9,5 +9,5 @@
     "compliance_officer_compliance_matrix_v1"
   ],
   "spec_hint": "compliance_officer_phase_1.json",
-  "status": "PENDING"
+  "status": "SUCCEEDED"
 }

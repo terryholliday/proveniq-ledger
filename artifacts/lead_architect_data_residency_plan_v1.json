@@ -1,0 +1,79 @@
+{
+  "artifact_id": "lead_architect_data_residency_plan_v1",
+  "role": "lead_architect",
+  "phase": 1,
+  "type": "PLAN",
+  "created_at": "2024-12-19T10:13:00Z",
+  "status": "APPROVED",
+  "plan": {
+    "name": "Proveniq Ledger Data Residency Plan",
+    "version": "1.0.0",
+    "objectives": [
+      "Ensure data sovereignty compliance",
+      "Minimize latency for primary markets",
+      "Enable regulatory compliance by jurisdiction"
+    ],
+    "regions": {
+      "primary": {
+        "region": "us-central1",
+        "provider": "Google Cloud (Firebase)",
+        "data_types": ["ledger_entries", "audit_logs", "user_data"],
+        "backup": "us-east1"
+      },
+      "planned_expansion": [
+        {
+          "region": "europe-west1",
+          "phase": 3,
+          "rationale": "GDPR compliance for EU customers"
+        },
+        {
+          "region": "asia-southeast1",
+          "phase": 5,
+          "rationale": "APAC market expansion"
+        }
+      ]
+    },
+    "data_classification": {
+      "critical": {
+        "types": ["ledger_entries", "cryptographic_proofs"],
+        "retention": "indefinite",
+        "replication": "synchronous"
+      },
+      "sensitive": {
+        "types": ["user_pii", "financial_data"],
+        "retention": "7_years",
+        "replication": "asynchronous"
+      },
+      "operational": {
+        "types": ["audit_logs", "analytics"],
+        "retention": "1_year",
+        "replication": "eventual"
+      }
+    },
+    "compliance_requirements": {
+      "GDPR": {
+        "applicable": true,
+        "controls": ["data_minimization", "right_to_erasure", "portability"]
+      },
+      "CCPA": {
+        "applicable": true,
+        "controls": ["disclosure", "opt_out", "deletion"]
+      },
+      "SOC2": {
+        "applicable": true,
+        "controls": ["encryption", "access_control", "audit_logging"]
+      }
+    }
+  },
+  "approvals": [
+    {
+      "role": "lead_architect",
+      "approved_at": "2024-12-19T10:13:00Z",
+      "signature": "LA_APPROVED"
+    }
+  ],
+  "consumers": [
+    "backend_devops_engineer_p2",
+    "compliance_officer_p2"
+  ]
+}

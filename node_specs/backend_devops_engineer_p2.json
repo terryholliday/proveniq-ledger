@@ -14,5 +14,5 @@
     "ledger_infra_stack_alpha_v1"
   ],
   "spec_hint": "backend_devops_engineer_phase_2.json",
-  "status": "PENDING"
+  "status": "SUCCEEDED"
 }

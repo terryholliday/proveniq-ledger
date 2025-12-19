@@ -1,0 +1,66 @@
+{
+  "artifact_id": "product_owner_ledger_charter_v1",
+  "role": "product_owner",
+  "phase": 1,
+  "type": "CHARTER",
+  "created_at": "2024-12-19T10:13:00Z",
+  "status": "RATIFIED",
+  "charter": {
+    "name": "Proveniq Ledger Product Charter",
+    "version": "1.0.0",
+    "purpose": "Define the product boundaries, principles, and governance for Proveniq Ledger",
+    "scope": {
+      "in_scope": [
+        "Immutable record of asset state transitions",
+        "Cryptographic verification of asset history",
+        "AI-powered risk analysis and fraud detection",
+        "Compliance enforcement and audit trails",
+        "Integration APIs for ecosystem partners"
+      ],
+      "out_of_scope": [
+        "Direct asset custody (handled by partners)",
+        "Payment processing",
+        "Insurance underwriting (handled by InsureIQ)",
+        "Physical inspection (handled by VerifyIQ)"
+      ]
+    },
+    "principles": [
+      {
+        "name": "Truth Over Convenience",
+        "description": "Never sacrifice data integrity for user experience"
+      },
+      {
+        "name": "Immutability First",
+        "description": "All records are append-only; history cannot be rewritten"
+      },
+      {
+        "name": "Verification Required",
+        "description": "No claim enters the ledger without verification"
+      },
+      {
+        "name": "Audit Everything",
+        "description": "Every action is logged and attributable"
+      }
+    ],
+    "stakeholders": {
+      "primary": ["Insurance Companies", "Asset Managers"],
+      "secondary": ["Regulators", "Auditors"],
+      "ecosystem": ["VerifyIQ", "ClaimsIQ", "InsureIQ"]
+    },
+    "governance": {
+      "change_control": "All feature changes require Product Owner approval",
+      "exception_authority": "Founder (Terry) for strategic pivots",
+      "review_cadence": "Weekly sprint reviews"
+    }
+  },
+  "approvals": [
+    {
+      "role": "product_owner",
+      "approved_at": "2024-12-19T10:13:00Z"
+    },
+    {
+      "role": "ceo",
+      "approved_at": "2024-12-19T10:13:00Z"
+    }
+  ]
+}

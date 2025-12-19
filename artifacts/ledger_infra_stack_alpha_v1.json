@@ -1,0 +1,52 @@
+{
+  "artifact_id": "ledger_infra_stack_alpha_v1",
+  "role": "backend_devops_engineer",
+  "phase": 2,
+  "type": "INFRASTRUCTURE_SPEC",
+  "created_at": "2024-12-19T10:20:00Z",
+  "status": "DEPLOYED",
+  "stack": {
+    "name": "Proveniq Ledger Alpha Stack",
+    "version": "1.0.0-alpha",
+    "environment": "production",
+    "components": {
+      "frontend": {
+        "framework": "React 19.2 + Vite 6.2",
+        "hosting": "Firebase Hosting",
+        "cdn": "Firebase CDN (global edge)"
+      },
+      "backend": {
+        "database": "Firestore",
+        "functions": "Firebase Cloud Functions (planned)",
+        "storage": "Firebase Storage (planned)"
+      },
+      "ai": {
+        "provider": "Google Gemini",
+        "sdk": "@google/genai",
+        "api_key": "GEMINI_API_KEY (env var)"
+      },
+      "auth": {
+        "provider": "Firebase Auth",
+        "session": "JWT tokens",
+        "rbac": "Admin, Auditor, Viewer"
+      }
+    },
+    "endpoints": {
+      "web": "https://proveniq-ledger.web.app",
+      "api": "Firestore direct (Phase 3: REST API)"
+    },
+    "scaling": {
+      "auto_scale": true,
+      "max_concurrent": "Firebase managed",
+      "rate_limits": "Firestore quotas"
+    },
+    "disaster_recovery": {
+      "backup": "Firestore automatic backups",
+      "rpo": "1 hour",
+      "rto": "4 hours"
+    }
+  },
+  "consumers": [
+    "all_p3_nodes"
+  ]
+}
