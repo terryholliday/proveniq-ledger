@@ -1,0 +1,49 @@
+{
+  "artifact_id": "backend_devops_engineer_phase_3_deliverables_v1",
+  "role": "backend_devops_engineer",
+  "phase": 3,
+  "phase_name": "Integration Sandbox & Alpha Pilots",
+  "created_at": "2024-12-19T10:33:00Z",
+  "status": "COMPLETE",
+  "deliverables": {
+    "sandbox_environment": {
+      "firebase_project": "proveniq-ledger-sandbox",
+      "status": "PROVISIONED",
+      "services": ["Hosting", "Firestore", "Auth"],
+      "data_seeding": "Automated via script"
+    },
+    "github_actions_pipeline": {
+      "workflows": [
+        {
+          "name": "CI",
+          "trigger": "push to main",
+          "jobs": ["lint", "typecheck", "test", "build"]
+        },
+        {
+          "name": "Deploy Preview",
+          "trigger": "pull_request",
+          "jobs": ["build", "deploy-preview"]
+        },
+        {
+          "name": "Deploy Production",
+          "trigger": "release tag",
+          "jobs": ["build", "deploy-prod"]
+        }
+      ],
+      "status": "CONFIGURED"
+    },
+    "infrastructure_as_code": {
+      "terraform": {
+        "modules": ["firebase-project", "firestore-rules", "hosting"],
+        "state": "Local (migrate to remote in Phase 4)"
+      }
+    },
+    "secrets_management": {
+      "github_secrets": ["FIREBASE_TOKEN", "GEMINI_API_KEY"],
+      "rotation_policy": "90 days"
+    }
+  },
+  "dependencies_unlocked": [
+    "backend_devops_engineer_p4"
+  ]
+}

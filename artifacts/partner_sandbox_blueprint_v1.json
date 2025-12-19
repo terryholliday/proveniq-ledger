@@ -1,0 +1,55 @@
+{
+  "artifact_id": "partner_sandbox_blueprint_v1",
+  "role": "solutions_engineer",
+  "phase": 3,
+  "type": "INTEGRATION_SPEC",
+  "created_at": "2024-12-19T10:33:00Z",
+  "status": "READY",
+  "blueprint": {
+    "name": "Proveniq Partner Sandbox",
+    "version": "1.0.0",
+    "purpose": "Self-service integration testing environment",
+    "components": {
+      "api_gateway": {
+        "base_url": "https://sandbox.proveniq.com/v1",
+        "authentication": "API Key (X-API-Key header)",
+        "rate_limit": "100 requests/minute"
+      },
+      "endpoints": {
+        "claims": {
+          "POST /claims": "Create a new claim",
+          "GET /claims": "List claims",
+          "GET /claims/{id}": "Get claim by ID",
+          "POST /claims/{id}/verify": "Trigger verification"
+        },
+        "webhooks": {
+          "POST /webhooks": "Register webhook endpoint",
+          "GET /webhooks": "List registered webhooks",
+          "DELETE /webhooks/{id}": "Remove webhook"
+        }
+      },
+      "test_data": {
+        "pre_seeded": true,
+        "claim_count": 100,
+        "scenarios": ["Valid claims", "Flagged claims", "High-risk claims"]
+      }
+    },
+    "onboarding_flow": [
+      "1. Sign partner agreement",
+      "2. Receive sandbox API key",
+      "3. Access documentation portal",
+      "4. Make first API call",
+      "5. Configure webhooks",
+      "6. Run integration tests",
+      "7. Request production access"
+    ],
+    "sla": {
+      "availability": "99% (sandbox)",
+      "support_response": "4 hours",
+      "data_retention": "30 days"
+    }
+  },
+  "consumers": [
+    "all_alpha_partners"
+  ]
+}
