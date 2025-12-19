@@ -1,0 +1,44 @@
+{
+  "artifact_id": "analytics_industry_insights_pack_v1",
+  "role": "data_scientist_analytics",
+  "phase": 5,
+  "type": "DATA_PRODUCT",
+  "created_at": "2024-12-19T10:53:00Z",
+  "status": "DEPLOYED",
+  "insights_pack": {
+    "name": "Proveniq Industry Insights",
+    "version": "1.0.0",
+    "description": "Aggregated, anonymized insights across the Proveniq ecosystem",
+    "products": {
+      "fraud_benchmarks": {
+        "description": "Industry fraud rate benchmarks",
+        "update_frequency": "Monthly",
+        "anonymization": "k-anonymity (k=100)"
+      },
+      "verification_trends": {
+        "description": "Verification success rates by category",
+        "update_frequency": "Weekly",
+        "segments": ["Auto", "Property", "Equipment", "Inventory"]
+      },
+      "risk_indicators": {
+        "description": "Emerging risk patterns",
+        "update_frequency": "Real-time",
+        "alerts": "Configurable thresholds"
+      },
+      "market_intelligence": {
+        "description": "Asset valuation trends",
+        "update_frequency": "Monthly",
+        "coverage": "Top 10 asset categories"
+      }
+    },
+    "access": {
+      "tier_1_partners": "Full access",
+      "tier_2_partners": "Summary access",
+      "public": "Annual report only"
+    },
+    "monetization": {
+      "model": "Included in enterprise tier",
+      "standalone": "$5K/month"
+    }
+  }
+}
