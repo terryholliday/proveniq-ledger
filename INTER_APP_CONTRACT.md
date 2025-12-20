@@ -1,9 +1,11 @@
 # Proveniq Inter-App Communication Contract
-> **Version**: 1.0  
-> **Last Updated**: December 2024  
+> **Version**: 1.1  
+> **Last Updated**: December 20, 2024  
 > **Authority**: Proveniq Prime / Terry (Sovereign)
+> 
+> **v1.1 Changes:** Added PROPERTIES and OPS app contracts, ClaimsIQ deposit/shrinkage endpoints
 
-This document defines the **canonical rules** for how Proveniq sub-applications communicate. All teams building HOME, CLAIMSIQ, LEDGER, CAPITAL, and BIDS must adhere to this contract.
+This document defines the **canonical rules** for how Proveniq sub-applications communicate. All teams building HOME, CLAIMSIQ, LEDGER, CAPITAL, BIDS, PROPERTIES, and OPS must adhere to this contract.
 
 ---
 
@@ -15,25 +17,32 @@ This document defines the **canonical rules** for how Proveniq sub-applications 
 │         (Identity, Optical Genome, Provenance Scoring, Fraud)           │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
-                    ┌───────────────┼───────────────┐
-                    │               │               │
-                    ▼               ▼               ▼
-              ┌─────────┐    ┌─────────┐    ┌─────────────┐
-              │  HOME   │    │  BIDS   │    │   CAPITAL   │
-              └────┬────┘    └────┬────┘    └──────┬──────┘
-                   │              │                │
-                   └──────────────┼────────────────┘
-                                  │
-                                  ▼
-                         ┌───────────────┐
-                         │    LEDGER     │
-                         │ (Append-Only) │
-                         └───────────────┘
-                                  │
-                                  ▼
-                         ┌───────────────┐
-                         │   CLAIMSIQ    │
-                         └───────────────┘
+        ┌───────────────┬───────────┼───────────┬───────────────┐
+        │               │           │           │               │
+        ▼               ▼           ▼           ▼               ▼
+  ┌─────────┐    ┌─────────┐  ┌─────────┐  ┌──────────┐  ┌─────────┐
+  │  HOME   │    │  BIDS   │  │ CAPITAL │  │PROPERTIES│  │   OPS   │
+  └────┬────┘    └────┬────┘  └────┬────┘  └────┬─────┘  └────┬────┘
+       │              │            │            │              │
+       └──────────────┼────────────┼────────────┼──────────────┘
+                      │            │            │
+                      ▼            ▼            ▼
+               ┌───────────────────────────────────┐
+               │            LEDGER                 │
+               │        (Append-Only)              │
+               └───────────────────────────────────┘
+                               │
+                               ▼
+               ┌───────────────────────────────────┐
+               │           CLAIMSIQ                │
+               │  (Properties + Ops → Claims)      │
+               └───────────────┬───────────────────┘
+                               │
+                               ▼
+               ┌───────────────────────────────────┐
+               │           CAPITAL                 │
+               │   (Claims → Payout Settlement)    │
+               └───────────────────────────────────┘
 ```
 
 **Proveniq Core** is the intelligence layer. **Ledger** is the immutable truth sink. All other apps are consumers and producers of events.
@@ -208,6 +217,9 @@ GET /v1/bids/items/{itemId}/provenance-summary
 | `/v1/claimsiq/items/{itemId}/preloss-provenance` | GET | Get pre-loss provenance for claims |
 | `/v1/claimsiq/claims/{claimId}/events` | POST | Record claim lifecycle event |
 | `/v1/claimsiq/claims/{claimId}/status` | GET | Get claim status |
+| `/v1/claimsiq/claims` | POST | Submit new claim (from HOME) |
+| `/v1/claimsiq/claims/deposit` | POST | Submit deposit dispute (from PROPERTIES) |
+| `/v1/claimsiq/claims/shrinkage` | POST | Submit shrinkage claim (from OPS) |
 
 **Request: Pre-Loss Provenance**
 ```json
@@ -227,6 +239,70 @@ GET /v1/claimsiq/items/{itemId}/preloss-provenance
     "lastConditionScore": 92
   },
   "claimReadiness": "HIGH"
+}
+```
+
+**Request: Deposit Dispute (from PROPERTIES)**
+```json
+POST /v1/claimsiq/claims/deposit
+Authorization: Bearer <service_token>
+X-Source-App: proveniq-properties
+
+{
+  "id": "prop-deposit-{lease_id}",
+  "intake_timestamp": "2024-12-20T10:00:00Z",
+  "policy_snapshot_id": "org_{org_id}",
+  "claimant_did": "did:proveniq:org:{org_id}",
+  "asset_id": "lease_{lease_id}",
+  "incident_vector": {
+    "type": "PROPERTY_DAMAGE",
+    "location": { "type": "Point", "coordinates": [0, 0] },
+    "severity": 7,
+    "description_hash": "sha256:abc..."
+  },
+  "claim_type": "DEPOSIT_DISPUTE",
+  "lease_id": "uuid",
+  "evidence": {
+    "move_in_inspection_hash": "sha256:...",
+    "move_out_inspection_hash": "sha256:...",
+    "evidence_file_hashes": ["sha256:...", "sha256:..."],
+    "damaged_items": [
+      { "room": "Kitchen", "item": "Countertop", "estimated_cents": 45000 }
+    ],
+    "total_damage_cents": 45000,
+    "deposit_amount_cents": 200000
+  }
+}
+```
+
+**Request: Shrinkage Claim (from OPS)**
+```json
+POST /v1/claimsiq/claims/shrinkage
+Authorization: Bearer <service_token>
+X-Service-Name: proveniq-ops
+
+{
+  "eventId": "shrink_{uuid}",
+  "timestamp": "2024-12-20T10:00:00Z",
+  "locationId": "loc_123",
+  "businessName": "Joe's Diner",
+  "productId": "prod_456",
+  "productName": "Prime Rib",
+  "quantityLost": 5,
+  "unitCostCents": 2500,
+  "totalLossCents": 12500,
+  "shrinkageType": "SPOILAGE",
+  "detectedBy": "BISHOP_SCAN"
+}
+```
+
+**Response (both):**
+```json
+{
+  "claimId": "claim_xyz789",
+  "correlationId": "corr_456",
+  "status": "INTAKE",
+  "message": "Claim accepted for processing"
 }
 ```
 
@@ -389,6 +465,63 @@ POST /v1/ledger/events
 
 ---
 
+### 6.6 PROPERTIES
+
+**Responsibilities:**
+- Landlord property management (residential, commercial, STR)
+- Inspection evidence with SHA-256 hashing
+- Deposit dispute documentation
+- STR turnover workflows
+- Mason AI advisory cost estimation
+
+**Must Consume:**
+| Event | Action |
+|-------|--------|
+| `claim.settled` | Update lease dispute status |
+
+**Must Publish:**
+| Event | When |
+|-------|------|
+| `deposit.claim.created` | Landlord initiates deposit dispute |
+| `inspection.signed` | Move-in/move-out inspection signed |
+| `evidence.confirmed` | Evidence file hash confirmed |
+
+**Integration: Properties → ClaimsIQ**
+- On claim packet generation, automatically submits to ClaimsIQ
+- Endpoint: `POST /v1/claimsiq/claims/deposit`
+- Payload includes: inspection hashes, evidence hashes, damage estimates
+- Fire-and-forget (non-blocking)
+
+---
+
+### 6.7 OPS
+
+**Responsibilities:**
+- Restaurant/retail inventory management
+- Bishop AI: scanning, shrinkage detection, vendor ordering
+- Smart Par Engine recommendations
+- Cashflow forecasting
+
+**Must Consume:**
+| Event | Action |
+|-------|--------|
+| `claim.settled` | Update shrinkage recovery status |
+
+**Must Publish:**
+| Event | When |
+|-------|------|
+| `shrinkage.detected` | Bishop detects inventory loss |
+| `order.queued` | Vendor order placed |
+| `scan.completed` | Inventory scan finished |
+
+**Integration: Ops → ClaimsIQ**
+- On shrinkage detection, automatically forwards to ClaimsIQ
+- Endpoint: `POST /v1/claimsiq/claims/shrinkage`
+- Payload includes: location, product, quantity, loss amount, shrinkage type
+- Fire-and-forget (non-blocking)
+
+---
+
 ## 7. Authentication & Authorization
 
 ### 7.1 Service-to-Service Auth
@@ -410,6 +543,8 @@ X-Correlation-Id: corr_456
 | `capital:ltv` | Request LTV recommendations | HOME, BIDS |
 | `bids:list` | Create auction listings | HOME, CAPITAL |
 | `claimsiq:evidence` | Access pre-loss evidence | Insurance Partners |
+| `claimsiq:deposit` | Submit deposit dispute claims | PROPERTIES |
+| `claimsiq:shrinkage` | Submit shrinkage claims | OPS |
 
 ---
 
