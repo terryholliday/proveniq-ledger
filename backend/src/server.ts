@@ -6,6 +6,14 @@ import { initDb, pool } from './db.js';
 import { requireAuth } from './auth.js';
 import { hashPayload, hashEntry, verifyPayloadHash, verifyEntryHash, verifyChainLink } from './hash.js';
 import { CreateEntrySchema, QueryEntriesSchema, type LedgerEntry, type IntegrityResult } from './types.js';
+import { 
+  LedgerEventSchema, 
+  safeParseLedgerEvent, 
+  isKnownEventType, 
+  getEventDomain,
+  SCHEMA_VERSION,
+  type LedgerEvent 
+} from './ledger.events.js';
 
 dotenv.config();
 
@@ -50,7 +58,105 @@ async function logAudit(
 }
 
 // ============================================
-// EVENT INGESTION
+// CANONICAL EVENT INGESTION (v1.0.0 Schema)
+// ============================================
+
+/**
+ * Ingest canonical event with strict schema validation.
+ * Use this endpoint for new integrations following DOMAIN_NOUN_VERB_PAST naming.
+ */
+app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const parseResult = safeParseLedgerEvent(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        error: 'CANONICAL_SCHEMA_VIOLATION',
+        message: 'Event does not match canonical envelope schema',
+        details: parseResult.error.errors,
+        schema_version: SCHEMA_VERSION,
+      });
+    }
+
+    const event = parseResult.data;
+    const id = randomUUID();
+    const committedAt = new Date().toISOString();
+
+    // Warn if event type is not in known registry (but still accept)
+    if (!isKnownEventType(event.event_type)) {
+      console.warn(`[LEDGER] Unknown event type: ${event.event_type} (domain: ${getEventDomain(event.event_type)})`);
+    }
+
+    // Calculate hashes
+    const payloadHash = hashPayload(event.payload);
+    const latest = await getLatestEntry();
+    const previousHash = latest?.entry_hash || null;
+    const entryHash = hashEntry(payloadHash, previousHash, event.producer, event.event_type, committedAt);
+
+    // Insert entry with canonical fields
+    const result = await pool.query(
+      `INSERT INTO ledger_entries 
+       (id, source, event_type, correlation_id, asset_id, anchor_id, actor_id, payload, payload_hash, previous_hash, entry_hash, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING id, sequence_number, created_at`,
+      [
+        id,
+        event.producer,
+        event.event_type,
+        event.correlation_id,
+        event.subject.asset_id,
+        event.subject.anchor_id || null,
+        null, // actor_id not in canonical schema (use subject fields)
+        {
+          ...event.payload,
+          _canonical: {
+            schema_version: event.schema_version,
+            occurred_at: event.occurred_at,
+            idempotency_key: event.idempotency_key,
+            producer_version: event.producer_version,
+            subject: event.subject,
+            signatures: event.signatures,
+            canonical_hash_hex: event.canonical_hash_hex,
+          },
+        },
+        payloadHash,
+        previousHash,
+        entryHash,
+        committedAt,
+      ]
+    );
+
+    const entry = result.rows[0];
+
+    // Audit log
+    await logAudit(
+      'canonical_event_ingested',
+      'ledger_entry',
+      id,
+      null,
+      { 
+        producer: event.producer, 
+        event_type: event.event_type,
+        schema_version: event.schema_version,
+        correlation_id: event.correlation_id,
+      },
+      req.ip || null
+    );
+
+    res.status(201).json({
+      event_id: entry.id,
+      sequence_number: entry.sequence_number,
+      entry_hash: entryHash,
+      committed_at: entry.created_at,
+      schema_version: SCHEMA_VERSION,
+    });
+  } catch (err) {
+    console.error('[LEDGER] canonical ingest error', err);
+    res.status(500).json({ error: 'Failed to ingest canonical event' });
+  }
+});
+
+// ============================================
+// LEGACY EVENT INGESTION (backward compatible)
 // ============================================
 
 app.post('/api/v1/events', requireAuth, async (req: Request, res: Response) => {
