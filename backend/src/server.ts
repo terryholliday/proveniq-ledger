@@ -6,13 +6,15 @@ import { initDb, pool } from './db.js';
 import { requireAuth } from './auth.js';
 import { hashPayload, hashEntry, verifyPayloadHash, verifyEntryHash, verifyChainLink } from './hash.js';
 import { CreateEntrySchema, QueryEntriesSchema, type LedgerEntry, type IntegrityResult } from './types.js';
-import { 
-  LedgerEventSchema, 
-  safeParseLedgerEvent, 
-  isKnownEventType, 
+import {
+  LedgerEventSchema,
+  LedgerInputSchema,
+  safeParseLedgerEvent,
+  isKnownEventType,
   getEventDomain,
   SCHEMA_VERSION,
-  type LedgerEvent 
+  type LedgerEvent,
+  type LedgerInput
 } from './ledger.events.js';
 
 dotenv.config();
@@ -25,8 +27,8 @@ app.use(express.json());
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ 
-    status: 'UP', 
+  res.status(200).json({
+    status: 'UP',
     service: 'proveniq-ledger',
     version: '0.2.0',
   });
@@ -67,11 +69,11 @@ async function logAudit(
  */
 app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Response) => {
   try {
-    const parseResult = safeParseLedgerEvent(req.body);
+    const parseResult = LedgerInputSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({
         error: 'CANONICAL_SCHEMA_VIOLATION',
-        message: 'Event does not match canonical envelope schema',
+        message: 'Event does not match canonical envelope schema (Input)',
         details: parseResult.error.errors,
         schema_version: SCHEMA_VERSION,
       });
@@ -92,11 +94,30 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
     const previousHash = latest?.entry_hash || null;
     const entryHash = hashEntry(payloadHash, previousHash, event.producer, event.event_type, committedAt);
 
+    // Check idempotency - return existing event if already processed
+    const existingCheck = await pool.query(
+      `SELECT id, sequence_number, entry_hash, created_at FROM ledger_entries WHERE idempotency_key = $1`,
+      [event.idempotency_key]
+    );
+    
+    if (existingCheck.rows.length > 0) {
+      const existing = existingCheck.rows[0];
+      return res.status(200).json({
+        event_id: existing.id,
+        sequence_number: existing.sequence_number,
+        entry_hash: existing.entry_hash,
+        committed_at: existing.created_at,
+        schema_version: SCHEMA_VERSION,
+        idempotent: true, // Signal this was a duplicate
+      });
+    }
+
     // Insert entry with canonical fields
     const result = await pool.query(
       `INSERT INTO ledger_entries 
-       (id, source, event_type, correlation_id, asset_id, anchor_id, actor_id, payload, payload_hash, previous_hash, entry_hash, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       (id, source, event_type, correlation_id, asset_id, anchor_id, actor_id, payload, payload_hash, previous_hash, entry_hash, created_at,
+        schema_version, producer_version, occurred_at, signatures, subject, idempotency_key, canonical_hash_hex)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
        RETURNING id, sequence_number, created_at`,
       [
         id,
@@ -105,23 +126,19 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
         event.correlation_id,
         event.subject.asset_id,
         event.subject.anchor_id || null,
-        null, // actor_id not in canonical schema (use subject fields)
-        {
-          ...event.payload,
-          _canonical: {
-            schema_version: event.schema_version,
-            occurred_at: event.occurred_at,
-            idempotency_key: event.idempotency_key,
-            producer_version: event.producer_version,
-            subject: event.subject,
-            signatures: event.signatures,
-            canonical_hash_hex: event.canonical_hash_hex,
-          },
-        },
+        null, // actor_id not in canonical schema
+        event.payload,
         payloadHash,
         previousHash,
         entryHash,
         committedAt,
+        event.schema_version,
+        event.producer_version,
+        event.occurred_at,
+        event.signatures,
+        event.subject,
+        event.idempotency_key,
+        event.canonical_hash_hex,
       ]
     );
 
@@ -133,8 +150,8 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
       'ledger_entry',
       id,
       null,
-      { 
-        producer: event.producer, 
+      {
+        producer: event.producer,
         event_type: event.event_type,
         schema_version: event.schema_version,
         correlation_id: event.correlation_id,
@@ -163,16 +180,16 @@ app.post('/api/v1/events', requireAuth, async (req: Request, res: Response) => {
   try {
     const parseResult = CreateEntrySchema.safeParse(req.body);
     if (!parseResult.success) {
-      return res.status(400).json({ 
-        error: 'Validation failed', 
-        details: parseResult.error.errors 
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: parseResult.error.errors
       });
     }
 
     const input = parseResult.data;
     const id = randomUUID();
     const timestamp = new Date().toISOString();
-    
+
     // Calculate hashes
     const payloadHash = hashPayload(input.payload);
     const latest = await getLatestEntry();
@@ -237,7 +254,7 @@ app.get('/api/v1/events/:id', requireAuth, async (req: Request, res: Response) =
       `SELECT * FROM ledger_entries WHERE id = $1`,
       [id]
     );
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -255,9 +272,9 @@ app.get('/api/v1/events', requireAuth, async (req: Request, res: Response) => {
   try {
     const parseResult = QueryEntriesSchema.safeParse(req.query);
     if (!parseResult.success) {
-      return res.status(400).json({ 
-        error: 'Invalid query parameters', 
-        details: parseResult.error.errors 
+      return res.status(400).json({
+        error: 'Invalid query parameters',
+        details: parseResult.error.errors
       });
     }
 
@@ -304,7 +321,7 @@ app.get('/api/v1/events', requireAuth, async (req: Request, res: Response) => {
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    
+
     // Get total count
     const countResult = await pool.query(
       `SELECT COUNT(*) as total FROM ledger_entries ${whereClause}`,
@@ -531,7 +548,7 @@ app.post('/v1/ledger/entries', requireAuth, async (req: Request, res: Response) 
     payload,
     correlation_id,
   };
-  
+
   // Forward to new handler (simplified - just call the logic)
   try {
     const input = { source: sourceApp, event_type, payload, correlation_id };

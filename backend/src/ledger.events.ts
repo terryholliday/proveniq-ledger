@@ -107,6 +107,18 @@ export const LedgerEventSchema = z.object({
 
 export type LedgerEvent = z.infer<typeof LedgerEventSchema>;
 
+/**
+ * LEDGER WRITE INPUT SCHEMA
+ * 
+ * What producers send to the API. 
+ * - Omitted: committed_at (Server authoritative)
+ */
+export const LedgerInputSchema = LedgerEventSchema.omit({
+  committed_at: true
+});
+
+export type LedgerInput = z.infer<typeof LedgerInputSchema>;
+
 // ============================================================================
 // EVENT TYPE REGISTRY - ANCHORS DOMAIN
 // ============================================================================

@@ -67,4 +67,54 @@ export async function initDb() {
       verified_by TEXT
     );
   `);
+
+  // MIGRATION: V4.0 SCHEMA LOCK
+  // Adding fields for Canonical Envelope compliance
+  await pool.query(`
+    DO $$ 
+    BEGIN 
+      -- Add schema_version
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ledger_entries' AND column_name='schema_version') THEN
+        ALTER TABLE ledger_entries ADD COLUMN schema_version TEXT DEFAULT '1.0.0';
+      END IF;
+
+      -- Add producer_version
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ledger_entries' AND column_name='producer_version') THEN
+        ALTER TABLE ledger_entries ADD COLUMN producer_version TEXT;
+      END IF;
+
+      -- Add occurred_at (Client Time)
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ledger_entries' AND column_name='occurred_at') THEN
+        ALTER TABLE ledger_entries ADD COLUMN occurred_at TIMESTAMPTZ;
+      END IF;
+
+      -- Add signatures (JSONB)
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ledger_entries' AND column_name='signatures') THEN
+        ALTER TABLE ledger_entries ADD COLUMN signatures JSONB;
+      END IF;
+
+      -- Add subject (JSONB) - Full subject object for completeness
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ledger_entries' AND column_name='subject') THEN
+        ALTER TABLE ledger_entries ADD COLUMN subject JSONB;
+      END IF;
+
+      -- Add idempotency_key for duplicate prevention
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ledger_entries' AND column_name='idempotency_key') THEN
+        ALTER TABLE ledger_entries ADD COLUMN idempotency_key TEXT;
+      END IF;
+
+      -- Add canonical_hash_hex for payload integrity
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ledger_entries' AND column_name='canonical_hash_hex') THEN
+        ALTER TABLE ledger_entries ADD COLUMN canonical_hash_hex TEXT;
+      END IF;
+    END $$;
+  `);
+
+  // Create unique index on idempotency_key for duplicate prevention
+  // This enforces idempotency at the database level
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_idempotency_key 
+    ON ledger_entries(idempotency_key) 
+    WHERE idempotency_key IS NOT NULL;
+  `);
 }
