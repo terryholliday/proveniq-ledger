@@ -59,6 +59,21 @@ export type Producer = z.infer<typeof Producer>;
 // CANONICAL EVENT ENVELOPE SCHEMA
 // ============================================================================
 
+// ============================================================================
+// CANONICAL EVENT ENVELOPE SCHEMA
+// ============================================================================
+
+export const CustodyState = z.enum([
+  'CREATED',
+  'OFFERED',
+  'IN_TRANSIT',
+  'DELIVERED',
+  'DISPUTED',
+  'CLOSED'
+]);
+
+export type CustodyState = z.infer<typeof CustodyState>;
+
 export const SubjectSchema = z.object({
   asset_id: z.string().uuid(),                    // Required - PROVENIQ Asset ID (PAID)
   anchor_id: z.string().max(64).optional(),       // Hardware anchor ID
@@ -70,6 +85,7 @@ export const SubjectSchema = z.object({
   inspection_id: z.string().uuid().optional(),    // Properties inspection
   lease_id: z.string().uuid().optional(),         // Properties lease
   loan_id: z.string().uuid().optional(),          // Capital loan
+  seal_id: z.string().max(64).optional(),         // Anchor Seal ID
 });
 
 export type Subject = z.infer<typeof SubjectSchema>;
@@ -125,21 +141,27 @@ export type LedgerInput = z.infer<typeof LedgerInputSchema>;
 
 export const ANCHOR_EVENTS = {
   /** Anchor device bound to asset for the first time */
-  ANCHOR_ASSET_BOUND: 'ANCHOR_ASSET_BOUND',
+  ANCHOR_REGISTERED: 'ANCHOR_REGISTERED',
+
+  /** Anchor tamper seal was armed */
+  ANCHOR_SEAL_ARMED: 'ANCHOR_SEAL_ARMED',
+
   /** Anchor tamper seal was broken (physical security compromised) */
   ANCHOR_SEAL_BROKEN: 'ANCHOR_SEAL_BROKEN',
+
   /** Anchor reported environmental reading (temp, humidity, shock) */
-  ANCHOR_READING_RECORDED: 'ANCHOR_READING_RECORDED',
-  /** Anchor battery level dropped below threshold */
-  ANCHOR_BATTERY_LOW: 'ANCHOR_BATTERY_LOW',
-  /** Anchor detected movement/motion */
-  ANCHOR_MOTION_DETECTED: 'ANCHOR_MOTION_DETECTED',
-  /** Anchor location changed (GPS/cell triangulation) */
-  ANCHOR_LOCATION_CHANGED: 'ANCHOR_LOCATION_CHANGED',
-  /** Anchor went offline (missed heartbeats) */
-  ANCHOR_OFFLINE_DETECTED: 'ANCHOR_OFFLINE_DETECTED',
-  /** Anchor came back online */
-  ANCHOR_ONLINE_RESTORED: 'ANCHOR_ONLINE_RESTORED',
+  ANCHOR_ENVIRONMENTAL_ALERT: 'ANCHOR_ENVIRONMENTAL_ALERT',
+
+  /** Anchor participated in a custody handoff */
+  ANCHOR_CUSTODY_SIGNAL: 'ANCHOR_CUSTODY_SIGNAL',
+
+  // DEPRECATED / REMOVED by v4.2 Remediation Protocol
+  // ANCHOR_ASSET_BOUND: 'ANCHOR_ASSET_BOUND',
+  // ANCHOR_BATTERY_LOW: 'ANCHOR_BATTERY_LOW',
+  // ANCHOR_MOTION_DETECTED: 'ANCHOR_MOTION_DETECTED',
+  // ANCHOR_LOCATION_CHANGED: 'ANCHOR_LOCATION_CHANGED',
+  // ANCHOR_OFFLINE_DETECTED: 'ANCHOR_OFFLINE_DETECTED',
+  // ANCHOR_ONLINE_RESTORED: 'ANCHOR_ONLINE_RESTORED',
 } as const;
 
 // ============================================================================
@@ -170,16 +192,28 @@ export const SERVICE_EVENTS = {
 export const TRANSIT_EVENTS = {
   /** Shipment created */
   TRANSIT_SHIPMENT_CREATED: 'TRANSIT_SHIPMENT_CREATED',
-  /** Package picked up by carrier */
-  TRANSIT_PACKAGE_PICKEDUP: 'TRANSIT_PACKAGE_PICKEDUP',
-  /** Package in transit (location update) */
-  TRANSIT_LOCATION_UPDATED: 'TRANSIT_LOCATION_UPDATED',
-  /** Package delivered */
-  TRANSIT_SHIPMENT_DELIVERED: 'TRANSIT_SHIPMENT_DELIVERED',
-  /** Delivery exception (delay, damage, etc.) */
-  TRANSIT_EXCEPTION_REPORTED: 'TRANSIT_EXCEPTION_REPORTED',
-  /** Recipient confirmed receipt */
-  TRANSIT_RECEIPT_CONFIRMED: 'TRANSIT_RECEIPT_CONFIRMED',
+
+  /** Handoff challenge created (Seller/Driver initiates) */
+  TRANSIT_HANDOFF_CHALLENGE_CREATED: 'TRANSIT_HANDOFF_CHALLENGE_CREATED',
+
+  /** Handoff accepted (Buyer/driver signs) */
+  TRANSIT_HANDOFF_ACCEPTED: 'TRANSIT_HANDOFF_ACCEPTED',
+
+  /** State changed (e.g. IN_TRANSIT, DELIVERED) */
+  TRANSIT_STATE_CHANGED: 'TRANSIT_STATE_CHANGED',
+
+  /** Dispute opened (e.g. seal broken during transit) */
+  TRANSIT_DISPUTE_OPENED: 'TRANSIT_DISPUTE_OPENED',
+
+  /** Dispute resolved */
+  TRANSIT_DISPUTE_RESOLVED: 'TRANSIT_DISPUTE_RESOLVED',
+
+  // REMOVED by v4.2
+  // TRANSIT_PACKAGE_PICKEDUP: 'TRANSIT_PACKAGE_PICKEDUP',
+  // TRANSIT_LOCATION_UPDATED: 'TRANSIT_LOCATION_UPDATED',
+  // TRANSIT_SHIPMENT_DELIVERED: 'TRANSIT_SHIPMENT_DELIVERED',
+  // TRANSIT_EXCEPTION_REPORTED: 'TRANSIT_EXCEPTION_REPORTED',
+  // TRANSIT_RECEIPT_CONFIRMED: 'TRANSIT_RECEIPT_CONFIRMED',
 } as const;
 
 // ============================================================================
@@ -214,12 +248,19 @@ export const CLAIMSIQ_EVENTS = {
   CLAIM_ANALYSIS_COMPLETED: 'CLAIM_ANALYSIS_COMPLETED',
   /** Fraud score calculated */
   CLAIM_FRAUD_SCORED: 'CLAIM_FRAUD_SCORED',
-  /** Claim approved for payout */
-  CLAIM_PAYOUT_APPROVED: 'CLAIM_PAYOUT_APPROVED',
+
+  /** Claim Decision Recorded (PAY | DENY | REVIEW) */
+  CLAIM_DECISION_RECORDED: 'CLAIM_DECISION_RECORDED',
+
+  /** Claim approved for payout (Explicit authorization) */
+  CLAIM_PAYOUT_AUTHORIZED: 'CLAIM_PAYOUT_AUTHORIZED',
+
   /** Claim denied */
   CLAIM_DENIAL_ISSUED: 'CLAIM_DENIAL_ISSUED',
-  /** Claim payout disbursed */
+
+  /** Claim payout disbursed (Recorded by ClaimsIQ if it tracks it, usually Capital) */
   CLAIM_PAYOUT_DISBURSED: 'CLAIM_PAYOUT_DISBURSED',
+
   /** Salvage initiated */
   CLAIM_SALVAGE_INITIATED: 'CLAIM_SALVAGE_INITIATED',
 } as const;
@@ -243,6 +284,15 @@ export const CAPITAL_EVENTS = {
   CAPITAL_COLLATERAL_SEIZED: 'CAPITAL_COLLATERAL_SEIZED',
   /** Loan paid in full */
   CAPITAL_LOAN_CLOSED: 'CAPITAL_LOAN_CLOSED',
+
+  /** Payout Executed via Stripe/Bank */
+  CAPITAL_PAYOUT_EXECUTED: 'CAPITAL_PAYOUT_EXECUTED',
+
+  /** Payout Failed */
+  CAPITAL_PAYOUT_FAILED: 'CAPITAL_PAYOUT_FAILED',
+
+  /** Remittance Received (e.g. from Bids) */
+  CAPITAL_REMITTANCE_RECEIVED: 'CAPITAL_REMITTANCE_RECEIVED',
 } as const;
 
 // ============================================================================
@@ -262,6 +312,9 @@ export const BIDS_EVENTS = {
   BIDS_AUCTION_SETTLED: 'BIDS_AUCTION_SETTLED',
   /** Auction cancelled */
   BIDS_AUCTION_CANCELLED: 'BIDS_AUCTION_CANCELLED',
+
+  /** Sale Settled (Funds received) */
+  BIDS_SALE_SETTLED: 'BIDS_SALE_SETTLED',
 } as const;
 
 // ============================================================================

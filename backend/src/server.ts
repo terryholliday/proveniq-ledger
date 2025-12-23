@@ -83,9 +83,22 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
     const id = randomUUID();
     const committedAt = new Date().toISOString();
 
-    // Warn if event type is not in known registry (but still accept)
+    // STRICT ENFORCEMENT: Reject unknown event types
     if (!isKnownEventType(event.event_type)) {
-      console.warn(`[LEDGER] Unknown event type: ${event.event_type} (domain: ${getEventDomain(event.event_type)})`);
+      console.warn(`[LEDGER] Rejected unknown event type: ${event.event_type} (domain: ${getEventDomain(event.event_type)})`);
+      return res.status(400).json({
+        error: 'INVALID_EVENT_TYPE',
+        message: `Event type '${event.event_type}' is not a valid canonical event type.`,
+        schema_version: SCHEMA_VERSION,
+      });
+    }
+
+    // STRICT ENFORCEMENT: Reject unsupported schema versions
+    if (event.schema_version !== SCHEMA_VERSION) {
+      return res.status(400).json({
+        error: 'UNSUPPORTED_SCHEMA_VERSION',
+        message: `Schema version '${event.schema_version}' is not supported. Expected: '${SCHEMA_VERSION}'.`,
+      });
     }
 
     // Calculate hashes
@@ -99,7 +112,7 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
       `SELECT id, sequence_number, entry_hash, created_at FROM ledger_entries WHERE idempotency_key = $1`,
       [event.idempotency_key]
     );
-    
+
     if (existingCheck.rows.length > 0) {
       const existing = existingCheck.rows[0];
       return res.status(200).json({
