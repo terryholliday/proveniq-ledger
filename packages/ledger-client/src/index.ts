@@ -132,9 +132,9 @@ export class LedgerClient {
    * Convenience method for Home events.
    */
   async writeHomeEvent(
-    eventType: 'HOME_ASSET_REGISTERED' | 'HOME_ASSET_UPDATED' | 'HOME_PHOTO_ADDED' | 
-               'HOME_DOCUMENT_ATTACHED' | 'HOME_VALUATION_UPDATED' | 'HOME_CUSTODY_CHANGED' | 
-               'HOME_CLAIM_INITIATED',
+    eventType: 'HOME_ASSET_REGISTERED' | 'HOME_ASSET_UPDATED' | 'HOME_PHOTO_ADDED' |
+      'HOME_DOCUMENT_ATTACHED' | 'HOME_VALUATION_UPDATED' | 'HOME_CUSTODY_CHANGED' |
+      'HOME_CLAIM_INITIATED',
     assetId: string,
     payload: Record<string, unknown>,
     options?: { correlationId?: string; idempotencyKey?: string }
@@ -152,8 +152,8 @@ export class LedgerClient {
    */
   async writeServiceEvent(
     eventType: 'SERVICE_WORKORDER_CREATED' | 'SERVICE_PROVIDER_ASSIGNED' | 'SERVICE_PROVIDER_ARRIVED' |
-               'SERVICE_WORK_COMPLETED' | 'SERVICE_RECORD_CREATED' | 'SERVICE_WORKORDER_CANCELLED' |
-               'SERVICE_RATING_SUBMITTED',
+      'SERVICE_WORK_COMPLETED' | 'SERVICE_RECORD_CREATED' | 'SERVICE_WORKORDER_CANCELLED' |
+      'SERVICE_RATING_SUBMITTED',
     assetId: string,
     workOrderId: string,
     payload: Record<string, unknown>,
@@ -172,8 +172,8 @@ export class LedgerClient {
    */
   async writeClaimEvent(
     eventType: 'CLAIM_INTAKE_RECEIVED' | 'CLAIM_EVIDENCE_ATTACHED' | 'CLAIM_ANALYSIS_COMPLETED' |
-               'CLAIM_FRAUD_SCORED' | 'CLAIM_PAYOUT_APPROVED' | 'CLAIM_DENIAL_ISSUED' |
-               'CLAIM_PAYOUT_DISBURSED' | 'CLAIM_SALVAGE_INITIATED',
+      'CLAIM_FRAUD_SCORED' | 'CLAIM_PAYOUT_APPROVED' | 'CLAIM_DENIAL_ISSUED' |
+      'CLAIM_PAYOUT_DISBURSED' | 'CLAIM_SALVAGE_INITIATED',
     assetId: string,
     claimId: string,
     payload: Record<string, unknown>,
@@ -192,8 +192,8 @@ export class LedgerClient {
    */
   async writeCapitalEvent(
     eventType: 'CAPITAL_LOAN_APPLIED' | 'CAPITAL_LOAN_APPROVED' | 'CAPITAL_LOAN_DISBURSED' |
-               'CAPITAL_PAYMENT_RECEIVED' | 'CAPITAL_LOAN_DEFAULTED' | 'CAPITAL_COLLATERAL_SEIZED' |
-               'CAPITAL_LOAN_CLOSED',
+      'CAPITAL_PAYMENT_RECEIVED' | 'CAPITAL_LOAN_DEFAULTED' | 'CAPITAL_COLLATERAL_SEIZED' |
+      'CAPITAL_LOAN_CLOSED',
     assetId: string,
     loanId: string,
     payload: Record<string, unknown>,
@@ -212,7 +212,7 @@ export class LedgerClient {
    */
   async writeOpsEvent(
     eventType: 'OPS_SCAN_COMPLETED' | 'OPS_SHRINKAGE_DETECTED' | 'OPS_ORDER_PLACED' |
-               'OPS_DELIVERY_RECEIVED' | 'OPS_PAR_ADJUSTED',
+      'OPS_DELIVERY_RECEIVED' | 'OPS_PAR_ADJUSTED',
     assetId: string,
     payload: Record<string, unknown>,
     options?: { correlationId?: string; idempotencyKey?: string }
@@ -229,10 +229,10 @@ export class LedgerClient {
    * Convenience method for Properties events.
    */
   async writePropertiesEvent(
-    eventType: 'PROPERTIES_INSPECTION_CREATED' | 'PROPERTIES_INSPECTION_SIGNED' | 
-               'PROPERTIES_EVIDENCE_UPLOADED' | 'PROPERTIES_MAINTENANCE_CREATED' |
-               'PROPERTIES_MAINTENANCE_DISPATCHED' | 'PROPERTIES_DEPOSIT_DISPUTED' |
-               'PROPERTIES_LEASE_SIGNED',
+    eventType: 'PROPERTIES_INSPECTION_CREATED' | 'PROPERTIES_INSPECTION_SIGNED' |
+      'PROPERTIES_EVIDENCE_UPLOADED' | 'PROPERTIES_MAINTENANCE_CREATED' |
+      'PROPERTIES_MAINTENANCE_DISPATCHED' | 'PROPERTIES_DEPOSIT_DISPUTED' |
+      'PROPERTIES_LEASE_SIGNED',
     assetId: string,
     payload: Record<string, unknown>,
     subjectExtras?: { inspection_id?: string; lease_id?: string },
@@ -251,7 +251,7 @@ export class LedgerClient {
    */
   async getAssetEvents(assetId: string, options?: { limit?: number; offset?: number }): Promise<{
     asset_id: string;
-    events: unknown[];
+    events: LedgerEvent[];
     total: number;
   }> {
     const params = new URLSearchParams();

@@ -1,0 +1,27 @@
+{
+    "name": "@proveniq/core-service",
+    "version": "1.0.0",
+    "description": "Proveniq Core: Universal Asset Profile Aggregator",
+    "main": "dist/server.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/server.js",
+        "dev": "ts-node-dev src/server.ts",
+        "test": "vitest"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "zod": "^3.22.4",
+        "dotenv": "^16.3.1",
+        "@proveniq/contracts": "file:../../packages/contracts",
+        "@proveniq/ledger-client": "file:../../packages/ledger-client"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.0",
+        "ts-node-dev": "^2.0.0",
+        "@types/express": "^4.17.17",
+        "@types/node": "^20.0.0",
+        "vitest": "^0.34.0"
+    }
+}
