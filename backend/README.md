@@ -1,8 +1,8 @@
-# PROVENIQ Ledger Backend
+# PROVENIQ Memory (Backend)
 
-**The Immutable Event Store**
+**The Immutable Record of Physical Truth**
 
-The Ledger is the single source of truth for all events in the PROVENIQ ecosystem. Every action—custody transfers, seal events, valuations, claims—is recorded immutably with cryptographic hash chaining.
+PROVENIQ Memory (formerly Ledger) is the single source of truth for all events in the PROVENIQ ecosystem. Every action—custody transfers, seal events, valuations, claims—is recorded immutably with cryptographic hash chaining.
 
 ## Architecture
 

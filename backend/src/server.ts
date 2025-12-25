@@ -30,6 +30,8 @@ app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'UP',
     service: 'proveniq-ledger',
+    product_name: 'PROVENIQ Memory',
+    product_key: 'memory',
     version: '0.2.0',
   });
 });
