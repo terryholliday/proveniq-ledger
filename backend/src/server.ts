@@ -3,6 +3,19 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { randomUUID } from 'crypto';
 import { initDb, pool } from './db.js';
+import {
+  initEventBusTables,
+  createSubscription,
+  getSubscription,
+  listSubscriptions,
+  deleteSubscription,
+  getMatchingSubscriptions,
+  queueDelivery,
+  processDeliveries,
+  getDeadLetterQueue,
+  retryDeadLetter,
+  getDeliveryStats,
+} from './event-bus.js';
 import { requireAuth } from './auth.js';
 import { hashPayload, hashEntry, verifyPayloadHash, verifyEntryHash, verifyChainLink } from './hash.js';
 import { CreateEntrySchema, QueryEntriesSchema, type LedgerEntry, type IntegrityResult } from './types.js';
@@ -551,6 +564,204 @@ app.get('/api/v1/stats', requireAuth, async (req: Request, res: Response) => {
 });
 
 // ============================================
+// CROSS-APP EVENT BUS - SUBSCRIPTIONS
+// ============================================
+
+/**
+ * POST /api/v1/subscriptions - Register webhook subscription
+ */
+app.post('/api/v1/subscriptions', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { subscriber_id, webhook_url, event_types, source_filter, secret } = req.body;
+
+    if (!subscriber_id || !webhook_url) {
+      return res.status(400).json({ error: 'subscriber_id and webhook_url are required' });
+    }
+
+    const subscription = await createSubscription(
+      subscriber_id,
+      webhook_url,
+      event_types || [],
+      source_filter || [],
+      secret
+    );
+
+    await logAudit(
+      'subscription_created',
+      'event_subscription',
+      subscription.id,
+      subscriber_id,
+      { webhook_url, event_types, source_filter },
+      req.ip || null
+    );
+
+    res.status(201).json({
+      id: subscription.id,
+      subscriber_id: subscription.subscriber_id,
+      webhook_url: subscription.webhook_url,
+      event_types: subscription.event_types,
+      source_filter: subscription.source_filter,
+      secret: subscription.secret, // Return secret only on creation
+      active: subscription.active,
+      created_at: subscription.created_at,
+    });
+  } catch (err: any) {
+    console.error('[EVENT BUS] subscription create error', err);
+    res.status(500).json({ error: 'Failed to create subscription' });
+  }
+});
+
+/**
+ * GET /api/v1/subscriptions - List subscriptions
+ */
+app.get('/api/v1/subscriptions', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const subscriberId = req.query.subscriber_id as string | undefined;
+    const subscriptions = await listSubscriptions(subscriberId);
+
+    res.json({
+      subscriptions: subscriptions.map(s => ({
+        id: s.id,
+        subscriber_id: s.subscriber_id,
+        webhook_url: s.webhook_url,
+        event_types: s.event_types,
+        source_filter: s.source_filter,
+        active: s.active,
+        created_at: s.created_at,
+        updated_at: s.updated_at,
+      })),
+      total: subscriptions.length,
+    });
+  } catch (err) {
+    console.error('[EVENT BUS] subscription list error', err);
+    res.status(500).json({ error: 'Failed to list subscriptions' });
+  }
+});
+
+/**
+ * GET /api/v1/subscriptions/:id - Get subscription details
+ */
+app.get('/api/v1/subscriptions/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const subscription = await getSubscription(req.params.id);
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    res.json({
+      id: subscription.id,
+      subscriber_id: subscription.subscriber_id,
+      webhook_url: subscription.webhook_url,
+      event_types: subscription.event_types,
+      source_filter: subscription.source_filter,
+      active: subscription.active,
+      created_at: subscription.created_at,
+      updated_at: subscription.updated_at,
+    });
+  } catch (err) {
+    console.error('[EVENT BUS] subscription get error', err);
+    res.status(500).json({ error: 'Failed to get subscription' });
+  }
+});
+
+/**
+ * DELETE /api/v1/subscriptions/:id - Delete subscription
+ */
+app.delete('/api/v1/subscriptions/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const deleted = await deleteSubscription(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    await logAudit(
+      'subscription_deleted',
+      'event_subscription',
+      req.params.id,
+      null,
+      null,
+      req.ip || null
+    );
+
+    res.status(204).send();
+  } catch (err) {
+    console.error('[EVENT BUS] subscription delete error', err);
+    res.status(500).json({ error: 'Failed to delete subscription' });
+  }
+});
+
+/**
+ * GET /api/v1/webhooks/stats - Get delivery statistics
+ */
+app.get('/api/v1/webhooks/stats', requireAuth, async (_req: Request, res: Response) => {
+  try {
+    const stats = await getDeliveryStats();
+    res.json(stats);
+  } catch (err) {
+    console.error('[EVENT BUS] stats error', err);
+    res.status(500).json({ error: 'Failed to get webhook stats' });
+  }
+});
+
+/**
+ * POST /api/v1/webhooks/process - Manually trigger webhook processing
+ */
+app.post('/api/v1/webhooks/process', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 50;
+    const result = await processDeliveries(limit);
+    res.json(result);
+  } catch (err) {
+    console.error('[EVENT BUS] process error', err);
+    res.status(500).json({ error: 'Failed to process webhooks' });
+  }
+});
+
+/**
+ * GET /api/v1/webhooks/dead-letter - Get dead letter queue
+ */
+app.get('/api/v1/webhooks/dead-letter', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const subscriberId = req.query.subscriber_id as string | undefined;
+    const limit = parseInt(req.query.limit as string) || 100;
+    const entries = await getDeadLetterQueue(subscriberId, limit);
+    res.json({ entries, total: entries.length });
+  } catch (err) {
+    console.error('[EVENT BUS] DLQ error', err);
+    res.status(500).json({ error: 'Failed to get dead letter queue' });
+  }
+});
+
+/**
+ * POST /api/v1/webhooks/dead-letter/:id/retry - Retry dead letter entry
+ */
+app.post('/api/v1/webhooks/dead-letter/:id/retry', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const success = await retryDeadLetter(req.params.id);
+    if (!success) {
+      return res.status(404).json({ error: 'Dead letter entry not found' });
+    }
+    res.json({ success: true, message: 'Queued for retry' });
+  } catch (err) {
+    console.error('[EVENT BUS] DLQ retry error', err);
+    res.status(500).json({ error: 'Failed to retry dead letter entry' });
+  }
+});
+
+// Helper function to queue events for subscriptions
+async function queueEventForSubscribers(eventId: string, eventType: string, source: string) {
+  try {
+    const subscriptions = await getMatchingSubscriptions(eventType, source);
+    for (const sub of subscriptions) {
+      await queueDelivery(sub.id, eventId);
+    }
+    console.log(`[EVENT BUS] Queued ${subscriptions.length} deliveries for event ${eventId}`);
+  } catch (err) {
+    console.error('[EVENT BUS] Failed to queue event for subscribers:', err);
+  }
+}
+
+// ============================================
 // LEGACY ENDPOINTS (backward compatibility)
 // ============================================
 
@@ -612,9 +823,25 @@ app.get('/v1/ledger/entries/:id', requireAuth, async (req: Request, res: Respons
 const startServer = async () => {
   try {
     await initDb();
+    await initEventBusTables();
+    console.log('[LEDGER] Event Bus tables initialized');
+    
+    // Start background webhook processor (every 30 seconds)
+    setInterval(async () => {
+      try {
+        const result = await processDeliveries(50);
+        if (result.processed > 0) {
+          console.log(`[EVENT BUS] Processed ${result.processed} deliveries: ${result.delivered} delivered, ${result.failed} failed`);
+        }
+      } catch (err) {
+        console.error('[EVENT BUS] Background processor error:', err);
+      }
+    }, 30000);
+    
     app.listen(PORT, () => {
       console.log(`[LEDGER] listening on port ${PORT}`);
       console.log(`[LEDGER] API: http://localhost:${PORT}/api/v1`);
+      console.log(`[LEDGER] Event Bus: Webhook subscriptions enabled`);
     });
   } catch (err) {
     console.error('[LEDGER] failed to init DB', err);
