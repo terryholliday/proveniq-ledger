@@ -7,6 +7,7 @@
  * - Partner-specific permissions
  */
 
+import { createHmac, timingSafeEqual } from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import { createApiError } from './errorHandler.js';
 
@@ -95,12 +96,20 @@ const PARTNER_REGISTRY: Map<string, PartnerConfig> = new Map([
   }],
 ]);
 
-// JWT Secret (in production, use environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || 'proveniq-ledger-jwt-secret-change-in-production';
+// JWT Secret (required - must be provided via environment variable)
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required for ledger API authentication');
+}
 
 // =============================================================================
 // JWT UTILITIES
 // =============================================================================
+
+interface JWTHeader {
+  alg: string;
+  typ: string;
+}
 
 interface JWTPayload {
   sub: string;        // Partner ID
@@ -112,16 +121,48 @@ interface JWTPayload {
 }
 
 /**
- * Simple JWT decoder (in production, use proper JWT library like jose)
- * This is a simplified version for demo purposes
+ * Base64url encode helper
+ */
+function base64UrlEncode(input: string): string {
+  return Buffer.from(input).toString('base64url');
+}
+
+/**
+ * Base64url decode helper
+ */
+function base64UrlDecode(input: string): string {
+  return Buffer.from(input, 'base64url').toString('utf8');
+}
+
+/**
+ * Verify and decode JWT (HS256)
  */
 function decodeJWT(token: string): JWTPayload | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-    
+
+    const [headerB64, payloadB64, signatureB64] = parts;
+    const header = JSON.parse(base64UrlDecode(headerB64)) as JWTHeader;
+    if (header.alg !== 'HS256' || header.typ !== 'JWT') {
+      return null;
+    }
+
+    const payload = JSON.parse(base64UrlDecode(payloadB64)) as JWTPayload;
+
+    const expectedSignature = createHmac('sha256', JWT_SECRET)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest();
+    const actualSignature = Buffer.from(signatureB64, 'base64url');
+
+    if (actualSignature.length !== expectedSignature.length) {
+      return null;
+    }
+
+    if (!timingSafeEqual(actualSignature, expectedSignature)) {
+      return null;
+    }
+
     // Check expiration
     if (payload.exp && payload.exp < Date.now() / 1000) {
       return null;
@@ -134,7 +175,7 @@ function decodeJWT(token: string): JWTPayload | null {
 }
 
 /**
- * Generate a simple JWT (for demo - use proper library in production)
+ * Generate a JWT (HS256)
  */
 export function generateJWT(partner: PartnerConfig, expiresInSeconds: number = 3600): string {
   const header = { alg: 'HS256', typ: 'JWT' };
@@ -147,12 +188,13 @@ export function generateJWT(partner: PartnerConfig, expiresInSeconds: number = 3
     exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
   };
   
-  const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
-  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  
-  // In production, sign with HMAC-SHA256
-  const signature = Buffer.from(`${headerB64}.${payloadB64}.${JWT_SECRET}`).toString('base64url');
-  
+  const headerB64 = base64UrlEncode(JSON.stringify(header));
+  const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+
+  const signature = createHmac('sha256', JWT_SECRET)
+    .update(`${headerB64}.${payloadB64}`)
+    .digest('base64url');
+
   return `${headerB64}.${payloadB64}.${signature}`;
 }
 

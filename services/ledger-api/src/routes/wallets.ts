@@ -3,9 +3,10 @@
  * GET /v1/ledger/wallets/:walletId/history - Get wallet event history
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { ledgerStore } from '../store/ledgerStore.js';
 import { createApiError } from '../middleware/errorHandler.js';
+import { authenticate, requirePermission, AuthenticatedRequest } from '../middleware/auth.js';
 
 export const walletsRouter = Router();
 
@@ -13,7 +14,11 @@ export const walletsRouter = Router();
  * GET /v1/ledger/wallets/:walletId/history
  * Get all events associated with a wallet
  */
-walletsRouter.get('/:walletId/history', async (req: Request, res: Response, next: NextFunction) => {
+walletsRouter.get(
+  '/:walletId/history',
+  authenticate,
+  requirePermission('wallets:read'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { walletId } = req.params;
     const { limit = '100', offset = '0', eventType } = req.query;

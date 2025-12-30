@@ -4,9 +4,10 @@
  * GET /v1/ledger/events/:eventId - Get specific event
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { ledgerStore } from '../store/ledgerStore.js';
 import { createApiError } from '../middleware/errorHandler.js';
+import { authenticate, requirePermission, AuthenticatedRequest } from '../middleware/auth.js';
 
 export const eventsRouter = Router();
 
@@ -14,7 +15,11 @@ export const eventsRouter = Router();
  * POST /v1/ledger/events
  * Append a new event to the ledger
  */
-eventsRouter.post('/', async (req: Request, res: Response, next: NextFunction) => {
+eventsRouter.post(
+  '/',
+  authenticate,
+  requirePermission('events:write'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const idempotencyKey = req.headers['x-idempotency-key'] as string | undefined;
     const { itemId, walletId, eventType, payload, custodyState } = req.body;
@@ -66,7 +71,11 @@ eventsRouter.post('/', async (req: Request, res: Response, next: NextFunction) =
  * GET /v1/ledger/events/:eventId
  * Get a specific event by ID
  */
-eventsRouter.get('/:eventId', async (req: Request, res: Response, next: NextFunction) => {
+eventsRouter.get(
+  '/:eventId',
+  authenticate,
+  requirePermission('events:read'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { eventId } = req.params;
 

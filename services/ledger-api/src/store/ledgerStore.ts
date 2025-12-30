@@ -5,6 +5,7 @@
  * For now, provides the data layer for the API server.
  */
 
+import { createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface LedgerEvent {
@@ -53,16 +54,10 @@ class LedgerStore {
   private sequence: number = 0;
 
   /**
-   * Compute SHA-256 hash (simplified for demo - use crypto in production)
+   * Compute SHA-256 hash
    */
   private computeHash(data: string): string {
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16).padStart(64, '0');
+    return createHash('sha256').update(data).digest('hex');
   }
 
   /**
