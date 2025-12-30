@@ -12,6 +12,12 @@ import { ledgerStore } from '../store/ledgerStore.js';
 
 export const badgeRouter = Router();
 
+const ITEM_ID_PATTERN = /^[a-zA-Z0-9_-]{3,128}$/;
+
+function isValidItemId(itemId: string): boolean {
+  return ITEM_ID_PATTERN.test(itemId);
+}
+
 /**
  * Badge data structure
  */
@@ -83,6 +89,15 @@ function calculateVerificationLevel(events: any[]): { level: BadgeData['verifica
  */
 badgeRouter.get('/:itemId', (req: Request, res: Response, _next: NextFunction) => {
   const { itemId } = req.params;
+  if (!isValidItemId(itemId)) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'INVALID_ITEM_ID',
+        message: 'Invalid itemId format',
+      },
+    });
+  }
   const baseUrl = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3002}`;
 
   const events = ledgerStore.getItemEvents(itemId);
@@ -120,6 +135,9 @@ badgeRouter.get('/:itemId', (req: Request, res: Response, _next: NextFunction) =
  */
 badgeRouter.get('/:itemId/embed.svg', (req: Request, res: Response, _next: NextFunction) => {
   const { itemId } = req.params;
+  if (!isValidItemId(itemId)) {
+    return res.status(400).send('Invalid itemId');
+  }
   
   const events = ledgerStore.getItemEvents(itemId);
   const { level, score } = calculateVerificationLevel(events);
@@ -178,6 +196,10 @@ badgeRouter.get('/:itemId/embed.svg', (req: Request, res: Response, _next: NextF
  */
 badgeRouter.get('/:itemId/embed.js', (req: Request, res: Response, _next: NextFunction) => {
   const { itemId } = req.params;
+  if (!isValidItemId(itemId)) {
+    res.setHeader('Content-Type', 'application/javascript');
+    return res.status(400).send('// Invalid itemId');
+  }
   const baseUrl = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3002}`;
 
   const js = `
@@ -239,6 +261,15 @@ badgeRouter.get('/:itemId/embed.js', (req: Request, res: Response, _next: NextFu
  */
 badgeRouter.get('/:itemId/html', (req: Request, res: Response, _next: NextFunction) => {
   const { itemId } = req.params;
+  if (!isValidItemId(itemId)) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'INVALID_ITEM_ID',
+        message: 'Invalid itemId format',
+      },
+    });
+  }
   const baseUrl = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3002}`;
 
   const html = `<!-- Proveniq Verification Badge -->

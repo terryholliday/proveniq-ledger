@@ -4,9 +4,10 @@
  * GET /v1/ledger/items/:itemId/custody - Get item custody state
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { ledgerStore } from '../store/ledgerStore.js';
 import { createApiError } from '../middleware/errorHandler.js';
+import { authenticate, requirePermission, AuthenticatedRequest } from '../middleware/auth.js';
 
 export const itemsRouter = Router();
 
@@ -14,7 +15,11 @@ export const itemsRouter = Router();
  * GET /v1/ledger/items/:itemId/events
  * Get all events for a specific item
  */
-itemsRouter.get('/:itemId/events', async (req: Request, res: Response, next: NextFunction) => {
+itemsRouter.get(
+  '/:itemId/events',
+  authenticate,
+  requirePermission('items:read'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { itemId } = req.params;
     const { limit = '100', offset = '0' } = req.query;
@@ -48,7 +53,11 @@ itemsRouter.get('/:itemId/events', async (req: Request, res: Response, next: Nex
  * GET /v1/ledger/items/:itemId/custody
  * Get current custody state for an item
  */
-itemsRouter.get('/:itemId/custody', async (req: Request, res: Response, next: NextFunction) => {
+itemsRouter.get(
+  '/:itemId/custody',
+  authenticate,
+  requirePermission('items:read'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { itemId } = req.params;
 

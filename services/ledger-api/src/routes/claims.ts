@@ -7,9 +7,10 @@
  * GET /v1/ledger/claims/stats - Get automation statistics
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { claimsAutomation, ClaimVerificationRequest } from '../modules/claims-automation/index.js';
 import { createApiError } from '../middleware/errorHandler.js';
+import { authenticate, requirePermission, AuthenticatedRequest } from '../middleware/auth.js';
 
 export const claimsRouter = Router();
 
@@ -17,7 +18,11 @@ export const claimsRouter = Router();
  * POST /v1/ledger/claims/verify
  * Verify a single claim against the ledger
  */
-claimsRouter.post('/verify', async (req: Request, res: Response, next: NextFunction) => {
+claimsRouter.post(
+  '/verify',
+  authenticate,
+  requirePermission('claims:verify'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const request = req.body as ClaimVerificationRequest;
 
@@ -45,7 +50,11 @@ claimsRouter.post('/verify', async (req: Request, res: Response, next: NextFunct
  * POST /v1/ledger/claims/verify/batch
  * Verify multiple claims in batch
  */
-claimsRouter.post('/verify/batch', async (req: Request, res: Response, next: NextFunction) => {
+claimsRouter.post(
+  '/verify/batch',
+  authenticate,
+  requirePermission('claims:verify'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { claims } = req.body as { claims: ClaimVerificationRequest[] };
 
@@ -81,7 +90,11 @@ claimsRouter.post('/verify/batch', async (req: Request, res: Response, next: Nex
  * GET /v1/ledger/claims/stats
  * Get claims automation statistics
  */
-claimsRouter.get('/stats', async (_req: Request, res: Response, next: NextFunction) => {
+claimsRouter.get(
+  '/stats',
+  authenticate,
+  requirePermission('claims:read'),
+  async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const stats = claimsAutomation.getAutomationStats();
 
@@ -98,7 +111,11 @@ claimsRouter.get('/stats', async (_req: Request, res: Response, next: NextFuncti
  * GET /v1/ledger/claims/item/:itemId/risk
  * Get risk assessment for a specific item
  */
-claimsRouter.get('/item/:itemId/risk', async (req: Request, res: Response, next: NextFunction) => {
+claimsRouter.get(
+  '/item/:itemId/risk',
+  authenticate,
+  requirePermission('claims:read'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { itemId } = req.params;
 
