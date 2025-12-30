@@ -7,10 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
+build
+
+# Environment files (CRITICAL - never commit secrets)
+.env
+.env.*
 *.local
+.env.local
+.env.production
+.env.development
 
 # Editor directories and files
 .vscode/*
@@ -22,5 +31,27 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Platform deployments
 .vercel
-.env*.local
+.railway
+
+# Firebase credentials (CRITICAL - never commit credentials)
+*firebase*.json
+*-adminsdk-*.json
+google-application-credentials.json
+*-service-account-*.json
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

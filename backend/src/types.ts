@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { LedgerEvent } from './ledger.events.js';
 
 // Valid event sources (PROVENIQ ecosystem)
 export const EventSource = z.enum([
@@ -18,6 +19,30 @@ export const EventSource = z.enum([
 ]);
 
 export type EventSource = z.infer<typeof EventSource>;
+
+// Canonical event input (for ingestion - omits committed_at which is server-set)
+export interface LedgerInput {
+  event_id: string;
+  client_id: string;
+  schema_version: string;
+  event_type: string;
+  occurred_at?: string;
+  correlation_id?: string;
+  idempotency_key?: string;
+  producer: string;
+  producer_version?: string;
+  subject: {
+    asset_id: string;
+    anchor_id?: string;
+    [key: string]: unknown;
+  };
+  payload: Record<string, unknown>;
+  canonical_hash_hex?: string;
+  signatures?: {
+    device_sig?: string;
+    provider_sig?: string;
+  };
+}
 
 // Ledger entry creation schema
 export const CreateEntrySchema = z.object({

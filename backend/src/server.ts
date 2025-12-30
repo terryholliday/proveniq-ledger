@@ -18,7 +18,7 @@ import {
 } from './event-bus.js';
 import { requireAuth } from './auth.js';
 import { hashPayload, hashEntry, verifyPayloadHash, verifyEntryHash, verifyChainLink } from './hash.js';
-import { CreateEntrySchema, QueryEntriesSchema, type LedgerEntry, type IntegrityResult } from './types.js';
+import { CreateEntrySchema, QueryEntriesSchema, type LedgerEntry, type IntegrityResult, type LedgerInput } from './types.js';
 import {
   LedgerEventSchema,
   LedgerInputSchema,
@@ -27,10 +27,15 @@ import {
   getEventDomain,
   SCHEMA_VERSION,
   type LedgerEvent,
-  type LedgerInput
 } from './ledger.events.js';
+import { ingestCanonicalEvent } from './ingest/canonical.js';
+import { validateEnvironment } from './config/env-validation.js';
 
 dotenv.config();
+
+// CRITICAL: Validate environment before proceeding
+// This will hard-fail (exit 1) if required configuration is missing
+validateEnvironment();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '8006', 10);
@@ -81,6 +86,8 @@ async function logAudit(
 /**
  * Ingest canonical event with strict schema validation.
  * Use this endpoint for new integrations following DOMAIN_NOUN_VERB_PAST naming.
+ * 
+ * CONCURRENCY: Uses advisory lock-based ingestion for hash chain integrity.
  */
 app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -95,8 +102,6 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
     }
 
     const event = parseResult.data;
-    const id = randomUUID();
-    const committedAt = new Date().toISOString();
 
     // STRICT ENFORCEMENT: Reject unknown event types
     if (!isKnownEventType(event.event_type)) {
@@ -116,83 +121,39 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
       });
     }
 
-    // Calculate hashes
-    const payloadHash = hashPayload(event.payload);
-    const latest = await getLatestEntry();
-    const previousHash = latest?.entry_hash || null;
-    const entryHash = hashEntry(payloadHash, previousHash, event.producer, event.event_type, committedAt);
+    // Prepare input for concurrency-safe ingestion
+    const input: LedgerInput = {
+      ...event,
+      event_id: randomUUID(),
+      client_id: event.producer, // Use producer as client_id for now
+    };
 
-    // Check idempotency - return existing event if already processed
-    const existingCheck = await pool.query(
-      `SELECT id, sequence_number, entry_hash, created_at FROM ledger_entries WHERE idempotency_key = $1`,
-      [event.idempotency_key]
-    );
-
-    if (existingCheck.rows.length > 0) {
-      const existing = existingCheck.rows[0];
-      return res.status(200).json({
-        event_id: existing.id,
-        sequence_number: existing.sequence_number,
-        entry_hash: existing.entry_hash,
-        committed_at: existing.created_at,
-        schema_version: SCHEMA_VERSION,
-        idempotent: true, // Signal this was a duplicate
-      });
-    }
-
-    // Insert entry with canonical fields
-    const result = await pool.query(
-      `INSERT INTO ledger_entries 
-       (id, source, event_type, correlation_id, asset_id, anchor_id, actor_id, payload, payload_hash, previous_hash, entry_hash, created_at,
-        schema_version, producer_version, occurred_at, signatures, subject, idempotency_key, canonical_hash_hex)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-       RETURNING id, sequence_number, created_at`,
-      [
-        id,
-        event.producer,
-        event.event_type,
-        event.correlation_id,
-        event.subject.asset_id,
-        event.subject.anchor_id || null,
-        null, // actor_id not in canonical schema
-        event.payload,
-        payloadHash,
-        previousHash,
-        entryHash,
-        committedAt,
-        event.schema_version,
-        event.producer_version,
-        event.occurred_at,
-        event.signatures,
-        event.subject,
-        event.idempotency_key,
-        event.canonical_hash_hex,
-      ]
-    );
-
-    const entry = result.rows[0];
+    // CRITICAL: Use advisory lock-based ingestion
+    const result = await ingestCanonicalEvent(pool, input);
 
     // Audit log
     await logAudit(
       'canonical_event_ingested',
       'ledger_entry',
-      id,
+      input.event_id,
       null,
       {
         producer: event.producer,
         event_type: event.event_type,
         schema_version: event.schema_version,
         correlation_id: event.correlation_id,
+        deduped: result.deduped,
       },
       req.ip || null
     );
 
-    res.status(201).json({
-      event_id: entry.id,
-      sequence_number: entry.sequence_number,
-      entry_hash: entryHash,
-      committed_at: entry.created_at,
+    res.status(result.deduped ? 200 : 201).json({
+      event_id: input.event_id,
+      sequence_number: result.sequence_number,
+      entry_hash: result.entry_hash,
+      committed_at: result.committed_at,
       schema_version: SCHEMA_VERSION,
+      idempotent: result.deduped,
     });
   } catch (err) {
     console.error('[LEDGER] canonical ingest error', err);

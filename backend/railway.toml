@@ -1,0 +1,73 @@
+# ============================================================================
+# PROVENIQ Memory (Ledger) - Railway Deployment Configuration
+# ============================================================================
+# CRITICAL: This is a cryptographic system of record.
+# Integrity verification MUST pass before deployment proceeds.
+# ============================================================================
+
+[build]
+# Build context is scoped to backend/ directory (monorepo)
+builder = "DOCKERFILE"
+dockerfilePath = "backend/Dockerfile"
+watchPaths = ["backend/**"]
+
+[deploy]
+# Start command (overridden by Dockerfile CMD, but explicit here for clarity)
+startCommand = "node dist/server.js"
+
+# Restart policy: always restart on failure
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Health check configuration
+# Railway will use the /health endpoint to verify service health
+healthcheckPath = "/health"
+healthcheckTimeout = 10
+
+[deploy.releaseCommand]
+# ============================================================================
+# CRITICAL: Release Gate - Integrity Verification
+# ============================================================================
+# This command runs BEFORE traffic is switched to the new deployment.
+# If it fails, the deployment is aborted.
+#
+# PHASE 1: Run database migrations (WORM triggers, constraints)
+# PHASE 2: Verify ledger integrity
+#   - If chain < 1000 entries: Full verification
+#   - If chain >= 1000 entries: Verify last 1000 + random sample
+# PHASE 3: Only if both pass, deployment proceeds
+# ============================================================================
+
+command = """
+  echo "🔒 PROVENIQ Memory - Release Gate" && \
+  echo "Phase 1: Database Migrations" && \
+  psql $DATABASE_URL -f migrations/001_immutability_constraints.sql && \
+  echo "✅ Migrations complete" && \
+  echo "" && \
+  echo "Phase 2: Ledger Integrity Verification" && \
+  ENTRY_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM ledger_entries") && \
+  echo "Ledger size: $ENTRY_COUNT entries" && \
+  if [ "$ENTRY_COUNT" -lt 1000 ]; then \
+    echo "Strategy: Full chain verification" && \
+    npm run verify-integrity; \
+  else \
+    echo "Strategy: Last 1000 + random sample" && \
+    npm run verify-integrity -- --last 1000 && \
+    npm run verify-integrity -- --sample 100; \
+  fi && \
+  echo "" && \
+  echo "✅ Release gate passed - deployment proceeding"
+"""
+
+# Release command timeout (migrations + verification should complete within this window)
+timeout = 600
+
+[env]
+# Environment variables that Railway should inject
+# Actual values are set in Railway dashboard (not committed to git)
+
+# Node.js environment
+NODE_ENV = "production"
+
+# Structured JSON logging (MANDATORY for production)
+LOG_FORMAT = "json"

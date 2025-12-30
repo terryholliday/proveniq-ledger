@@ -9,7 +9,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint .",
-    "verify": "tsx src/verify.ts"
+    "verify": "tsx src/verify.ts",
+    "verify-integrity": "tsx src/verify-integrity.ts",
+    "migrate": "psql $DATABASE_URL -f migrations/001_immutability_constraints.sql"
   },
   "dependencies": {
     "cors": "^2.8.5",
