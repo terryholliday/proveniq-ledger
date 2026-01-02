@@ -391,70 +391,107 @@ export const HOME_EVENTS = {
 export const VERIFY_EVENTS = {
   // ---------------------------------------------------------------------------
   // Verification State Machine Events (Canon v1.1 Section 4)
+  // Canon Reference: Golden Master v1.1 - event_type MUST equal Canon string
   // ---------------------------------------------------------------------------
   
   /** FCE ingestion started - envelope received and queued for analysis */
-  VERIFY_INGEST_STARTED: 'VERIFY_INGEST_STARTED',
+  EVT_VERIFY_INGEST_STARTED: 'EVT_VERIFY_INGEST_STARTED',
   
   /** Analysis phase started - AI/ML processing of FCE payload */
-  VERIFY_ANALYSIS_STARTED: 'VERIFY_ANALYSIS_STARTED',
+  EVT_VERIFY_ANALYSIS_STARTED: 'EVT_VERIFY_ANALYSIS_STARTED',
   
   /** Adjudication phase started - human or automated review */
-  VERIFY_ADJUDICATION_STARTED: 'VERIFY_ADJUDICATION_STARTED',
+  EVT_VERIFY_ADJUDICATION_STARTED: 'EVT_VERIFY_ADJUDICATION_STARTED',
   
   /** Tier 3 evidentiary confirmation achieved */
-  VERIFY_TIER_THREE_PASSED: 'VERIFY_TIER_THREE_PASSED',
+  EVT_VERIFY_TIER_3_PASS: 'EVT_VERIFY_TIER_3_PASS',
   
   /** FCE flagged for review (risk signals triggered) */
-  VERIFY_FLAGGED: 'VERIFY_FLAGGED',
+  EVT_VERIFY_FLAGGED: 'EVT_VERIFY_FLAGGED',
   
   /** Assertion conflict detected (user claims vs system observations) */
-  VERIFY_ASSERTION_CONFLICT: 'VERIFY_ASSERTION_CONFLICT',
+  EVT_VERIFY_ASSERTION_CONFLICT: 'EVT_VERIFY_ASSERTION_CONFLICT',
   
-  /** Lifecycle extended (additional evidence requested) */
-  VERIFY_LIFECYCLE_EXTENDED: 'VERIFY_LIFECYCLE_EXTENDED',
+  /** Lifecycle extended (re-verification passed) */
+  EVT_VERIFY_LIFECYCLE_EXTEND: 'EVT_VERIFY_LIFECYCLE_EXTEND',
   
   /** Lifecycle broken (verification chain invalidated) */
-  VERIFY_LIFECYCLE_BROKEN: 'VERIFY_LIFECYCLE_BROKEN',
+  EVT_VERIFY_LIFECYCLE_BREAK: 'EVT_VERIFY_LIFECYCLE_BREAK',
 
   // ---------------------------------------------------------------------------
   // Threat Interdiction Events (Canon v1.1 Section 2)
   // ---------------------------------------------------------------------------
   
   /** Timestamp mismatch detected (device vs server vs EXIF) */
-  VERIFY_TIMESTAMP_MISMATCH: 'VERIFY_TIMESTAMP_MISMATCH',
+  EVT_VERIFY_TS_MISMATCH: 'EVT_VERIFY_TS_MISMATCH',
   
   /** Metadata anomaly detected (EXIF stripped, inconsistent, etc.) */
-  VERIFY_METADATA_ANOMALY: 'VERIFY_METADATA_ANOMALY',
+  EVT_VERIFY_METADATA_ANOMALY: 'EVT_VERIFY_METADATA_ANOMALY',
   
   /** Duplicate media detected (same image hash seen before) */
-  VERIFY_DUPLICATE_MEDIA: 'VERIFY_DUPLICATE_MEDIA',
+  EVT_VERIFY_DUPLICATE_MEDIA: 'EVT_VERIFY_DUPLICATE_MEDIA',
   
   /** Document validation failed (receipt/invoice invalid) */
-  VERIFY_DOCUMENT_INVALID: 'VERIFY_DOCUMENT_INVALID',
+  EVT_VERIFY_DOC_INVALID: 'EVT_VERIFY_DOC_INVALID',
   
   /** Physical challenge required (in-person verification needed) */
-  VERIFY_PHYSICAL_CHALLENGE_REQUIRED: 'VERIFY_PHYSICAL_CHALLENGE_REQUIRED',
+  EVT_VERIFY_PHYSICAL_CHALLENGE_REQUIRED: 'EVT_VERIFY_PHYSICAL_CHALLENGE_REQUIRED',
   
   /** Geo confidence low (location spoofing suspected) */
-  VERIFY_GEO_CONFIDENCE_LOW: 'VERIFY_GEO_CONFIDENCE_LOW',
+  EVT_VERIFY_GEO_CONFIDENCE_LOW: 'EVT_VERIFY_GEO_CONFIDENCE_LOW',
 
   // ---------------------------------------------------------------------------
   // Account-Level Events (Canon v1.1 Section 5)
+  // These are NOT prefixed with VERIFY_ per Canon - they are account-level
   // ---------------------------------------------------------------------------
   
   /** Account frozen due to fraud signals */
-  VERIFY_ACCOUNT_FROZEN: 'VERIFY_ACCOUNT_FROZEN',
+  EVT_ACCOUNT_FROZEN: 'EVT_ACCOUNT_FROZEN',
   
   /** Account reinstated after review */
-  VERIFY_ACCOUNT_REINSTATED: 'VERIFY_ACCOUNT_REINSTATED',
+  EVT_ACCOUNT_REINSTATED: 'EVT_ACCOUNT_REINSTATED',
   
   /** Asset locked pending investigation */
-  VERIFY_ASSET_LOCKED: 'VERIFY_ASSET_LOCKED',
+  EVT_ASSET_LOCKED: 'EVT_ASSET_LOCKED',
   
   /** Asset unlocked after investigation */
-  VERIFY_ASSET_UNLOCKED: 'VERIFY_ASSET_UNLOCKED',
+  EVT_ASSET_UNLOCKED: 'EVT_ASSET_UNLOCKED',
 } as const;
+
+// ============================================================================
+// LEGACY EVENT ALIASES (Backward Compatibility)
+// ============================================================================
+// 
+// Accept legacy VERIFY_* event types from older producers.
+// Store only canonical EVT_* in ledger_entries.event_type.
+// This prevents outages while migrating all producers to Canon.
+// ============================================================================
+
+export const EVENT_ALIASES: Record<string, string> = {
+  // Verification State Machine Events
+  VERIFY_INGEST_STARTED: 'EVT_VERIFY_INGEST_STARTED',
+  VERIFY_ANALYSIS_STARTED: 'EVT_VERIFY_ANALYSIS_STARTED',
+  VERIFY_ADJUDICATION_STARTED: 'EVT_VERIFY_ADJUDICATION_STARTED',
+  VERIFY_TIER_THREE_PASSED: 'EVT_VERIFY_TIER_3_PASS',
+  VERIFY_FLAGGED: 'EVT_VERIFY_FLAGGED',
+  VERIFY_ASSERTION_CONFLICT: 'EVT_VERIFY_ASSERTION_CONFLICT',
+  VERIFY_LIFECYCLE_EXTENDED: 'EVT_VERIFY_LIFECYCLE_EXTEND',
+  VERIFY_LIFECYCLE_BROKEN: 'EVT_VERIFY_LIFECYCLE_BREAK',
+
+  // Threat Interdiction Events
+  VERIFY_TIMESTAMP_MISMATCH: 'EVT_VERIFY_TS_MISMATCH',
+  VERIFY_METADATA_ANOMALY: 'EVT_VERIFY_METADATA_ANOMALY',
+  VERIFY_DUPLICATE_MEDIA: 'EVT_VERIFY_DUPLICATE_MEDIA',
+  VERIFY_DOCUMENT_INVALID: 'EVT_VERIFY_DOC_INVALID',
+  VERIFY_PHYSICAL_CHALLENGE_REQUIRED: 'EVT_VERIFY_PHYSICAL_CHALLENGE_REQUIRED',
+  VERIFY_GEO_CONFIDENCE_LOW: 'EVT_VERIFY_GEO_CONFIDENCE_LOW',
+
+  // Account-Level Events
+  VERIFY_ACCOUNT_FROZEN: 'EVT_ACCOUNT_FROZEN',
+  VERIFY_ACCOUNT_REINSTATED: 'EVT_ACCOUNT_REINSTATED',
+  VERIFY_ASSET_LOCKED: 'EVT_ASSET_LOCKED',
+  VERIFY_ASSET_UNLOCKED: 'EVT_ASSET_UNLOCKED',
+};
 
 // ============================================================================
 // EVENT TYPE REGISTRY - CORE DOMAIN
@@ -526,4 +563,56 @@ export function isKnownEventType(eventType: string): eventType is EventType {
  */
 export function getEventDomain(eventType: string): string {
   return eventType.split('_')[0];
+}
+
+// ============================================================================
+// NORMALIZATION HELPERS (Backward Compatibility)
+// ============================================================================
+
+/**
+ * Normalize an event type to its canonical form.
+ * 
+ * - If the event type is a legacy alias (VERIFY_*), returns the canonical EVT_* form.
+ * - If the event type is already canonical, returns it unchanged.
+ * - Records the original type for audit purposes.
+ * 
+ * @param eventType - The incoming event type (may be legacy or canonical)
+ * @returns Object with canonical type and original type (if aliased)
+ */
+export function normalizeEventType(eventType: string): {
+  canonical: string;
+  original: string | null;
+  wasAliased: boolean;
+} {
+  const aliasedTo = EVENT_ALIASES[eventType];
+  
+  if (aliasedTo) {
+    return {
+      canonical: aliasedTo,
+      original: eventType,
+      wasAliased: true,
+    };
+  }
+  
+  return {
+    canonical: eventType,
+    original: null,
+    wasAliased: false,
+  };
+}
+
+/**
+ * Check if an event type is a known canonical type OR a known alias.
+ * Use this for validation before normalization.
+ */
+export function isAcceptedEventType(eventType: string): boolean {
+  // Check if it's a canonical type
+  if (Object.values(ALL_EVENT_TYPES).includes(eventType as EventType)) {
+    return true;
+  }
+  // Check if it's a known alias
+  if (eventType in EVENT_ALIASES) {
+    return true;
+  }
+  return false;
 }

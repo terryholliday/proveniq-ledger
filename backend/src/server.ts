@@ -24,7 +24,9 @@ import {
   LedgerInputSchema,
   safeParseLedgerEvent,
   isKnownEventType,
+  isAcceptedEventType,
   getEventDomain,
+  normalizeEventType,
   SCHEMA_VERSION,
   type LedgerEvent,
 } from './ledger.events.js';
@@ -103,14 +105,25 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
 
     const event = parseResult.data;
 
-    // STRICT ENFORCEMENT: Reject unknown event types
-    if (!isKnownEventType(event.event_type)) {
+    // ========================================================================
+    // BACKWARD COMPATIBILITY: Accept legacy VERIFY_* aliases
+    // Normalize to canonical EVT_* before validation and storage
+    // ========================================================================
+    const normalized = normalizeEventType(event.event_type);
+    
+    // Reject unknown event types (not canonical AND not a known alias)
+    if (!isAcceptedEventType(event.event_type)) {
       console.warn(`[LEDGER] Rejected unknown event type: ${event.event_type} (domain: ${getEventDomain(event.event_type)})`);
       return res.status(400).json({
         error: 'INVALID_EVENT_TYPE',
         message: `Event type '${event.event_type}' is not a valid canonical event type.`,
         schema_version: SCHEMA_VERSION,
       });
+    }
+    
+    // Log alias usage for migration tracking
+    if (normalized.wasAliased) {
+      console.info(`[LEDGER] Alias used: ${normalized.original} -> ${normalized.canonical}`);
     }
 
     // STRICT ENFORCEMENT: Reject unsupported schema versions
@@ -122,8 +135,10 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
     }
 
     // Prepare input for concurrency-safe ingestion
+    // CRITICAL: Store CANONICAL event type, not the alias
     const input: LedgerInput = {
       ...event,
+      event_type: normalized.canonical, // Always store canonical form
       event_id: randomUUID(),
       client_id: event.producer, // Use producer as client_id for now
     };
@@ -131,7 +146,7 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
     // CRITICAL: Use advisory lock-based ingestion
     const result = await ingestCanonicalEvent(pool, input);
 
-    // Audit log
+    // Audit log - include original type if aliased for audit trail
     await logAudit(
       'canonical_event_ingested',
       'ledger_entry',
@@ -139,10 +154,12 @@ app.post('/api/v1/events/canonical', requireAuth, async (req: Request, res: Resp
       null,
       {
         producer: event.producer,
-        event_type: event.event_type,
+        event_type: normalized.canonical,
+        event_type_original: normalized.original, // null if not aliased
         schema_version: event.schema_version,
         correlation_id: event.correlation_id,
         deduped: result.deduped,
+        was_aliased: normalized.wasAliased,
       },
       req.ip || null
     );
