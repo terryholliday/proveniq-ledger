@@ -86,6 +86,8 @@ export const SubjectSchema = z.object({
   lease_id: z.string().uuid().optional(),         // Properties lease
   loan_id: z.string().uuid().optional(),          // Capital loan
   seal_id: z.string().max(64).optional(),         // Anchor Seal ID
+  envelope_id: z.string().uuid().optional(),      // FCE envelope ID (Canon v1.1)
+  account_id: z.string().uuid().optional(),       // User account ID (for account-level events)
 });
 
 export type Subject = z.infer<typeof SubjectSchema>;
@@ -377,6 +379,84 @@ export const HOME_EVENTS = {
 } as const;
 
 // ============================================================================
+// EVENT TYPE REGISTRY - VERIFY DOMAIN (Canon v1.1 / v1.1.1)
+// ============================================================================
+// 
+// These events implement the Forensic Capture Envelope (FCE) verification
+// state machine defined in Golden Master v1.1 Section 4.
+//
+// Canon Reference: GOLDEN_MASTER_v1.1.1_ADDENDUM.md
+// ============================================================================
+
+export const VERIFY_EVENTS = {
+  // ---------------------------------------------------------------------------
+  // Verification State Machine Events (Canon v1.1 Section 4)
+  // ---------------------------------------------------------------------------
+  
+  /** FCE ingestion started - envelope received and queued for analysis */
+  VERIFY_INGEST_STARTED: 'VERIFY_INGEST_STARTED',
+  
+  /** Analysis phase started - AI/ML processing of FCE payload */
+  VERIFY_ANALYSIS_STARTED: 'VERIFY_ANALYSIS_STARTED',
+  
+  /** Adjudication phase started - human or automated review */
+  VERIFY_ADJUDICATION_STARTED: 'VERIFY_ADJUDICATION_STARTED',
+  
+  /** Tier 3 evidentiary confirmation achieved */
+  VERIFY_TIER_THREE_PASSED: 'VERIFY_TIER_THREE_PASSED',
+  
+  /** FCE flagged for review (risk signals triggered) */
+  VERIFY_FLAGGED: 'VERIFY_FLAGGED',
+  
+  /** Assertion conflict detected (user claims vs system observations) */
+  VERIFY_ASSERTION_CONFLICT: 'VERIFY_ASSERTION_CONFLICT',
+  
+  /** Lifecycle extended (additional evidence requested) */
+  VERIFY_LIFECYCLE_EXTENDED: 'VERIFY_LIFECYCLE_EXTENDED',
+  
+  /** Lifecycle broken (verification chain invalidated) */
+  VERIFY_LIFECYCLE_BROKEN: 'VERIFY_LIFECYCLE_BROKEN',
+
+  // ---------------------------------------------------------------------------
+  // Threat Interdiction Events (Canon v1.1 Section 2)
+  // ---------------------------------------------------------------------------
+  
+  /** Timestamp mismatch detected (device vs server vs EXIF) */
+  VERIFY_TIMESTAMP_MISMATCH: 'VERIFY_TIMESTAMP_MISMATCH',
+  
+  /** Metadata anomaly detected (EXIF stripped, inconsistent, etc.) */
+  VERIFY_METADATA_ANOMALY: 'VERIFY_METADATA_ANOMALY',
+  
+  /** Duplicate media detected (same image hash seen before) */
+  VERIFY_DUPLICATE_MEDIA: 'VERIFY_DUPLICATE_MEDIA',
+  
+  /** Document validation failed (receipt/invoice invalid) */
+  VERIFY_DOCUMENT_INVALID: 'VERIFY_DOCUMENT_INVALID',
+  
+  /** Physical challenge required (in-person verification needed) */
+  VERIFY_PHYSICAL_CHALLENGE_REQUIRED: 'VERIFY_PHYSICAL_CHALLENGE_REQUIRED',
+  
+  /** Geo confidence low (location spoofing suspected) */
+  VERIFY_GEO_CONFIDENCE_LOW: 'VERIFY_GEO_CONFIDENCE_LOW',
+
+  // ---------------------------------------------------------------------------
+  // Account-Level Events (Canon v1.1 Section 5)
+  // ---------------------------------------------------------------------------
+  
+  /** Account frozen due to fraud signals */
+  VERIFY_ACCOUNT_FROZEN: 'VERIFY_ACCOUNT_FROZEN',
+  
+  /** Account reinstated after review */
+  VERIFY_ACCOUNT_REINSTATED: 'VERIFY_ACCOUNT_REINSTATED',
+  
+  /** Asset locked pending investigation */
+  VERIFY_ASSET_LOCKED: 'VERIFY_ASSET_LOCKED',
+  
+  /** Asset unlocked after investigation */
+  VERIFY_ASSET_UNLOCKED: 'VERIFY_ASSET_UNLOCKED',
+} as const;
+
+// ============================================================================
 // EVENT TYPE REGISTRY - CORE DOMAIN
 // ============================================================================
 
@@ -408,6 +488,7 @@ export const ALL_EVENT_TYPES = {
   ...OPS_EVENTS,
   ...PROPERTIES_EVENTS,
   ...HOME_EVENTS,
+  ...VERIFY_EVENTS,
   ...CORE_EVENTS,
 } as const;
 
