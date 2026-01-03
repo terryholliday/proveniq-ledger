@@ -37,7 +37,11 @@ dotenv.config();
 
 // CRITICAL: Validate environment before proceeding
 // This will hard-fail (exit 1) if required configuration is missing
-validateEnvironment();
+// NOTE: Unit tests import the server module; Vitest runs without full runtime
+// environment. We skip process-exiting validation in test runs only.
+if (process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true') {
+  validateEnvironment();
+}
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '8006', 10);
@@ -743,6 +747,52 @@ async function queueEventForSubscribers(eventId: string, eventType: string, sour
 // LEGACY ENDPOINTS (backward compatibility)
 // ============================================
 
+app.post('/api/v1/events', requireAuth, async (req: Request, res: Response) => {
+  // Backward compatibility endpoint - expects: { app, event_type, payload }
+  const sourceApp = req.body.app || req.body.source;
+  const event_type = req.body.event_type;
+  const payload = req.body.payload;
+  const correlation_id = req.body.correlation_id || null;
+
+  try {
+    const input = { source: sourceApp, event_type, payload, correlation_id };
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    const payloadHash = hashPayload(payload);
+
+    // Uses the same advisory lock key as canonical ingestion.
+    // Derived from: "PRVN" (0x5052564e) + "LEDG" (0x4c454447)
+    const LEDGER_LOCK_KEY_1 = 0x5052564e;
+    const LEDGER_LOCK_KEY_2 = 0x4c454447;
+
+    await pool.query('BEGIN');
+    await pool.query('SELECT pg_advisory_xact_lock($1, $2)', [LEDGER_LOCK_KEY_1, LEDGER_LOCK_KEY_2]);
+
+    const latest = await getLatestEntry();
+    const previousHash = latest?.entry_hash || null;
+    const entryHash = hashEntry(payloadHash, previousHash, sourceApp, event_type, timestamp);
+
+    await pool.query(
+      `INSERT INTO ledger_entries 
+       (id, source, event_type, correlation_id, payload, payload_hash, previous_hash, entry_hash, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [id, sourceApp, event_type, correlation_id, payload, payloadHash, previousHash, entryHash, timestamp]
+    );
+
+    await pool.query('COMMIT');
+
+    res.status(202).json({ id, status: 'accepted' });
+  } catch (err) {
+    console.error('[LEDGER] legacy ingest error', err);
+    try {
+      await pool.query('ROLLBACK');
+    } catch {
+      // ignore
+    }
+    res.status(500).json({ error: 'Failed to ingest entry' });
+  }
+});
+
 app.post('/v1/ledger/entries', requireAuth, async (req: Request, res: Response) => {
   // Redirect to new endpoint format
   const { app: sourceApp, event_type, payload, correlation_id } = req.body || {};
@@ -759,6 +809,17 @@ app.post('/v1/ledger/entries', requireAuth, async (req: Request, res: Response) 
     const id = randomUUID();
     const timestamp = new Date().toISOString();
     const payloadHash = hashPayload(payload);
+    // ======================================================================
+    // LAUNCH-SAFE: Serialize legacy writes to prevent hash-chain forks
+    // ======================================================================
+    // Uses the same advisory lock key as canonical ingestion.
+    // Derived from: "PRVN" (0x5052564e) + "LEDG" (0x4c454447)
+    const LEDGER_LOCK_KEY_1 = 0x5052564e;
+    const LEDGER_LOCK_KEY_2 = 0x4c454447;
+
+    await pool.query('BEGIN');
+    await pool.query('SELECT pg_advisory_xact_lock($1, $2)', [LEDGER_LOCK_KEY_1, LEDGER_LOCK_KEY_2]);
+
     const latest = await getLatestEntry();
     const previousHash = latest?.entry_hash || null;
     const entryHash = hashEntry(payloadHash, previousHash, sourceApp, event_type, timestamp);
@@ -770,9 +831,16 @@ app.post('/v1/ledger/entries', requireAuth, async (req: Request, res: Response) 
       [id, sourceApp, event_type, correlation_id, payload, payloadHash, previousHash, entryHash, timestamp]
     );
 
+    await pool.query('COMMIT');
+
     res.status(202).json({ id, status: 'accepted' });
   } catch (err) {
     console.error('[LEDGER] legacy ingest error', err);
+    try {
+      await pool.query('ROLLBACK');
+    } catch {
+      // ignore
+    }
     res.status(500).json({ error: 'Failed to ingest entry' });
   }
 });

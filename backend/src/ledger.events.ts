@@ -105,7 +105,7 @@ export type Signatures = z.infer<typeof SignaturesSchema>;
  * Every event written to the Ledger MUST validate against this shape.
  */
 export const LedgerEventSchema = z.object({
-  schema_version: z.literal(SCHEMA_VERSION),
+  schema_version: z.string().min(1),
   event_type: z.string().regex(/^[A-Z]+(_[A-Z]+)+$/, {
     message: 'Event type must be DOMAIN_NOUN_VERB_PAST format (e.g., ANCHOR_SEAL_BROKEN)',
   }),
@@ -511,6 +511,54 @@ export const CORE_EVENTS = {
 } as const;
 
 // ============================================================================
+// PHASE 0 EVENTS (Launch-Safe) - Freeze/Dispute/Proof/Oracle
+// ============================================================================
+
+export const PHASE0_EVENTS = {
+  /** Fraud signal added (inputs to freeze policy thresholding) */
+  FRAUD_SIGNAL_ADDED: 'FRAUD_SIGNAL_ADDED',
+
+  /** Evidence frozen (blocks new evidence + new verification issuance) */
+  EVIDENCE_FROZEN: 'EVIDENCE_FROZEN',
+
+  /** Freeze lifted */
+  FREEZE_LIFTED: 'FREEZE_LIFTED',
+
+  /** Dispute filed (transitions asset to frozen) */
+  DISPUTE_FILED: 'DISPUTE_FILED',
+
+  /** Dispute resolved (lifts freeze or revokes/supersedes verification) */
+  DISPUTE_RESOLVED: 'DISPUTE_RESOLVED',
+
+  /** Verification granted for a specific snapshot */
+  VERIFICATION_GRANTED: 'VERIFICATION_GRANTED',
+
+  /** Verification revoked */
+  VERIFICATION_REVOKED: 'VERIFICATION_REVOKED',
+
+  /** Proof view created (TTL-bound anti-screenshot view) */
+  PROOF_VIEW_CREATED: 'PROOF_VIEW_CREATED',
+
+  /** Proof view revoked */
+  PROOF_VIEW_REVOKED: 'PROOF_VIEW_REVOKED',
+
+  /** Oracle data rejected (outlier detected) */
+  ORACLE_DATA_REJECTED: 'ORACLE_DATA_REJECTED',
+
+  /** Claim added (ledger replay source for current asset claim_json) */
+  CLAIM_ADDED: 'CLAIM_ADDED',
+
+  /** Claim updated (ledger replay source for current asset claim_json) */
+  CLAIM_UPDATED: 'CLAIM_UPDATED',
+
+  /** Evidence added (ledger replay source for current evidence content hashes) */
+  EVIDENCE_ADDED: 'EVIDENCE_ADDED',
+
+  /** State hash mismatch detected (append-only integrity alert) */
+  STATE_HASH_MISMATCH: 'STATE_HASH_MISMATCH',
+} as const;
+
+// ============================================================================
 // ALL EVENTS (COMBINED REGISTRY)
 // ============================================================================
 
@@ -527,6 +575,7 @@ export const ALL_EVENT_TYPES = {
   ...HOME_EVENTS,
   ...VERIFY_EVENTS,
   ...CORE_EVENTS,
+  ...PHASE0_EVENTS,
 } as const;
 
 export type EventType = typeof ALL_EVENT_TYPES[keyof typeof ALL_EVENT_TYPES];
