@@ -86,6 +86,8 @@ export const SubjectSchema = z.object({
   lease_id: z.string().uuid().optional(),         // Properties lease
   loan_id: z.string().uuid().optional(),          // Capital loan
   seal_id: z.string().max(64).optional(),         // Anchor Seal ID
+  envelope_id: z.string().uuid().optional(),      // FCE envelope ID (Canon v1.1)
+  account_id: z.string().uuid().optional(),       // User account ID (for account-level events)
 });
 
 export type Subject = z.infer<typeof SubjectSchema>;
@@ -103,7 +105,7 @@ export type Signatures = z.infer<typeof SignaturesSchema>;
  * Every event written to the Ledger MUST validate against this shape.
  */
 export const LedgerEventSchema = z.object({
-  schema_version: z.literal(SCHEMA_VERSION),
+  schema_version: z.string().min(1),
   event_type: z.string().regex(/^[A-Z]+(_[A-Z]+)+$/, {
     message: 'Event type must be DOMAIN_NOUN_VERB_PAST format (e.g., ANCHOR_SEAL_BROKEN)',
   }),
@@ -377,6 +379,121 @@ export const HOME_EVENTS = {
 } as const;
 
 // ============================================================================
+// EVENT TYPE REGISTRY - VERIFY DOMAIN (Canon v1.1 / v1.1.1)
+// ============================================================================
+// 
+// These events implement the Forensic Capture Envelope (FCE) verification
+// state machine defined in Golden Master v1.1 Section 4.
+//
+// Canon Reference: GOLDEN_MASTER_v1.1.1_ADDENDUM.md
+// ============================================================================
+
+export const VERIFY_EVENTS = {
+  // ---------------------------------------------------------------------------
+  // Verification State Machine Events (Canon v1.1 Section 4)
+  // Canon Reference: Golden Master v1.1 - event_type MUST equal Canon string
+  // ---------------------------------------------------------------------------
+  
+  /** FCE ingestion started - envelope received and queued for analysis */
+  EVT_VERIFY_INGEST_STARTED: 'EVT_VERIFY_INGEST_STARTED',
+  
+  /** Analysis phase started - AI/ML processing of FCE payload */
+  EVT_VERIFY_ANALYSIS_STARTED: 'EVT_VERIFY_ANALYSIS_STARTED',
+  
+  /** Adjudication phase started - human or automated review */
+  EVT_VERIFY_ADJUDICATION_STARTED: 'EVT_VERIFY_ADJUDICATION_STARTED',
+  
+  /** Tier 3 evidentiary confirmation achieved */
+  EVT_VERIFY_TIER_3_PASS: 'EVT_VERIFY_TIER_3_PASS',
+  
+  /** FCE flagged for review (risk signals triggered) */
+  EVT_VERIFY_FLAGGED: 'EVT_VERIFY_FLAGGED',
+  
+  /** Assertion conflict detected (user claims vs system observations) */
+  EVT_VERIFY_ASSERTION_CONFLICT: 'EVT_VERIFY_ASSERTION_CONFLICT',
+  
+  /** Lifecycle extended (re-verification passed) */
+  EVT_VERIFY_LIFECYCLE_EXTEND: 'EVT_VERIFY_LIFECYCLE_EXTEND',
+  
+  /** Lifecycle broken (verification chain invalidated) */
+  EVT_VERIFY_LIFECYCLE_BREAK: 'EVT_VERIFY_LIFECYCLE_BREAK',
+
+  // ---------------------------------------------------------------------------
+  // Threat Interdiction Events (Canon v1.1 Section 2)
+  // ---------------------------------------------------------------------------
+  
+  /** Timestamp mismatch detected (device vs server vs EXIF) */
+  EVT_VERIFY_TS_MISMATCH: 'EVT_VERIFY_TS_MISMATCH',
+  
+  /** Metadata anomaly detected (EXIF stripped, inconsistent, etc.) */
+  EVT_VERIFY_METADATA_ANOMALY: 'EVT_VERIFY_METADATA_ANOMALY',
+  
+  /** Duplicate media detected (same image hash seen before) */
+  EVT_VERIFY_DUPLICATE_MEDIA: 'EVT_VERIFY_DUPLICATE_MEDIA',
+  
+  /** Document validation failed (receipt/invoice invalid) */
+  EVT_VERIFY_DOC_INVALID: 'EVT_VERIFY_DOC_INVALID',
+  
+  /** Physical challenge required (in-person verification needed) */
+  EVT_VERIFY_PHYSICAL_CHALLENGE_REQUIRED: 'EVT_VERIFY_PHYSICAL_CHALLENGE_REQUIRED',
+  
+  /** Geo confidence low (location spoofing suspected) */
+  EVT_VERIFY_GEO_CONFIDENCE_LOW: 'EVT_VERIFY_GEO_CONFIDENCE_LOW',
+
+  // ---------------------------------------------------------------------------
+  // Account-Level Events (Canon v1.1 Section 5)
+  // These are NOT prefixed with VERIFY_ per Canon - they are account-level
+  // ---------------------------------------------------------------------------
+  
+  /** Account frozen due to fraud signals */
+  EVT_ACCOUNT_FROZEN: 'EVT_ACCOUNT_FROZEN',
+  
+  /** Account reinstated after review */
+  EVT_ACCOUNT_REINSTATED: 'EVT_ACCOUNT_REINSTATED',
+  
+  /** Asset locked pending investigation */
+  EVT_ASSET_LOCKED: 'EVT_ASSET_LOCKED',
+  
+  /** Asset unlocked after investigation */
+  EVT_ASSET_UNLOCKED: 'EVT_ASSET_UNLOCKED',
+} as const;
+
+// ============================================================================
+// LEGACY EVENT ALIASES (Backward Compatibility)
+// ============================================================================
+// 
+// Accept legacy VERIFY_* event types from older producers.
+// Store only canonical EVT_* in ledger_entries.event_type.
+// This prevents outages while migrating all producers to Canon.
+// ============================================================================
+
+export const EVENT_ALIASES: Record<string, string> = {
+  // Verification State Machine Events
+  VERIFY_INGEST_STARTED: 'EVT_VERIFY_INGEST_STARTED',
+  VERIFY_ANALYSIS_STARTED: 'EVT_VERIFY_ANALYSIS_STARTED',
+  VERIFY_ADJUDICATION_STARTED: 'EVT_VERIFY_ADJUDICATION_STARTED',
+  VERIFY_TIER_THREE_PASSED: 'EVT_VERIFY_TIER_3_PASS',
+  VERIFY_FLAGGED: 'EVT_VERIFY_FLAGGED',
+  VERIFY_ASSERTION_CONFLICT: 'EVT_VERIFY_ASSERTION_CONFLICT',
+  VERIFY_LIFECYCLE_EXTENDED: 'EVT_VERIFY_LIFECYCLE_EXTEND',
+  VERIFY_LIFECYCLE_BROKEN: 'EVT_VERIFY_LIFECYCLE_BREAK',
+
+  // Threat Interdiction Events
+  VERIFY_TIMESTAMP_MISMATCH: 'EVT_VERIFY_TS_MISMATCH',
+  VERIFY_METADATA_ANOMALY: 'EVT_VERIFY_METADATA_ANOMALY',
+  VERIFY_DUPLICATE_MEDIA: 'EVT_VERIFY_DUPLICATE_MEDIA',
+  VERIFY_DOCUMENT_INVALID: 'EVT_VERIFY_DOC_INVALID',
+  VERIFY_PHYSICAL_CHALLENGE_REQUIRED: 'EVT_VERIFY_PHYSICAL_CHALLENGE_REQUIRED',
+  VERIFY_GEO_CONFIDENCE_LOW: 'EVT_VERIFY_GEO_CONFIDENCE_LOW',
+
+  // Account-Level Events
+  VERIFY_ACCOUNT_FROZEN: 'EVT_ACCOUNT_FROZEN',
+  VERIFY_ACCOUNT_REINSTATED: 'EVT_ACCOUNT_REINSTATED',
+  VERIFY_ASSET_LOCKED: 'EVT_ASSET_LOCKED',
+  VERIFY_ASSET_UNLOCKED: 'EVT_ASSET_UNLOCKED',
+};
+
+// ============================================================================
 // EVENT TYPE REGISTRY - CORE DOMAIN
 // ============================================================================
 
@@ -394,6 +511,54 @@ export const CORE_EVENTS = {
 } as const;
 
 // ============================================================================
+// PHASE 0 EVENTS (Launch-Safe) - Freeze/Dispute/Proof/Oracle
+// ============================================================================
+
+export const PHASE0_EVENTS = {
+  /** Fraud signal added (inputs to freeze policy thresholding) */
+  FRAUD_SIGNAL_ADDED: 'FRAUD_SIGNAL_ADDED',
+
+  /** Evidence frozen (blocks new evidence + new verification issuance) */
+  EVIDENCE_FROZEN: 'EVIDENCE_FROZEN',
+
+  /** Freeze lifted */
+  FREEZE_LIFTED: 'FREEZE_LIFTED',
+
+  /** Dispute filed (transitions asset to frozen) */
+  DISPUTE_FILED: 'DISPUTE_FILED',
+
+  /** Dispute resolved (lifts freeze or revokes/supersedes verification) */
+  DISPUTE_RESOLVED: 'DISPUTE_RESOLVED',
+
+  /** Verification granted for a specific snapshot */
+  VERIFICATION_GRANTED: 'VERIFICATION_GRANTED',
+
+  /** Verification revoked */
+  VERIFICATION_REVOKED: 'VERIFICATION_REVOKED',
+
+  /** Proof view created (TTL-bound anti-screenshot view) */
+  PROOF_VIEW_CREATED: 'PROOF_VIEW_CREATED',
+
+  /** Proof view revoked */
+  PROOF_VIEW_REVOKED: 'PROOF_VIEW_REVOKED',
+
+  /** Oracle data rejected (outlier detected) */
+  ORACLE_DATA_REJECTED: 'ORACLE_DATA_REJECTED',
+
+  /** Claim added (ledger replay source for current asset claim_json) */
+  CLAIM_ADDED: 'CLAIM_ADDED',
+
+  /** Claim updated (ledger replay source for current asset claim_json) */
+  CLAIM_UPDATED: 'CLAIM_UPDATED',
+
+  /** Evidence added (ledger replay source for current evidence content hashes) */
+  EVIDENCE_ADDED: 'EVIDENCE_ADDED',
+
+  /** State hash mismatch detected (append-only integrity alert) */
+  STATE_HASH_MISMATCH: 'STATE_HASH_MISMATCH',
+} as const;
+
+// ============================================================================
 // ALL EVENTS (COMBINED REGISTRY)
 // ============================================================================
 
@@ -408,7 +573,9 @@ export const ALL_EVENT_TYPES = {
   ...OPS_EVENTS,
   ...PROPERTIES_EVENTS,
   ...HOME_EVENTS,
+  ...VERIFY_EVENTS,
   ...CORE_EVENTS,
+  ...PHASE0_EVENTS,
 } as const;
 
 export type EventType = typeof ALL_EVENT_TYPES[keyof typeof ALL_EVENT_TYPES];
@@ -445,4 +612,56 @@ export function isKnownEventType(eventType: string): eventType is EventType {
  */
 export function getEventDomain(eventType: string): string {
   return eventType.split('_')[0];
+}
+
+// ============================================================================
+// NORMALIZATION HELPERS (Backward Compatibility)
+// ============================================================================
+
+/**
+ * Normalize an event type to its canonical form.
+ * 
+ * - If the event type is a legacy alias (VERIFY_*), returns the canonical EVT_* form.
+ * - If the event type is already canonical, returns it unchanged.
+ * - Records the original type for audit purposes.
+ * 
+ * @param eventType - The incoming event type (may be legacy or canonical)
+ * @returns Object with canonical type and original type (if aliased)
+ */
+export function normalizeEventType(eventType: string): {
+  canonical: string;
+  original: string | null;
+  wasAliased: boolean;
+} {
+  const aliasedTo = EVENT_ALIASES[eventType];
+  
+  if (aliasedTo) {
+    return {
+      canonical: aliasedTo,
+      original: eventType,
+      wasAliased: true,
+    };
+  }
+  
+  return {
+    canonical: eventType,
+    original: null,
+    wasAliased: false,
+  };
+}
+
+/**
+ * Check if an event type is a known canonical type OR a known alias.
+ * Use this for validation before normalization.
+ */
+export function isAcceptedEventType(eventType: string): boolean {
+  // Check if it's a canonical type
+  if (Object.values(ALL_EVENT_TYPES).includes(eventType as EventType)) {
+    return true;
+  }
+  // Check if it's a known alias
+  if (eventType in EVENT_ALIASES) {
+    return true;
+  }
+  return false;
 }

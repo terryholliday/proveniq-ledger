@@ -18,6 +18,17 @@
 import type { Pool, PoolClient } from 'pg';
 import { createHash } from 'crypto';
 import type { LedgerInput } from '../types.js';
+import { stableStringify } from '../lib/canonical.js';
+import { getDefaultSigner } from '../lib/signer.js';
+import { computeAssetStateHash, computeEvidenceSetHash } from '../lib/canonical.js';
+
+ function getOptionalStringField(
+   payload: Record<string, unknown>,
+   key: string
+ ): string | null {
+   const v = payload[key];
+   return typeof v === 'string' && v.length > 0 ? v : null;
+ }
 
 /**
  * Advisory Lock Key for Canonical Chain
@@ -148,11 +159,10 @@ export async function ingestCanonicalEvent(
     );
     
     // ========================================================================
-    // IDEMPOTENCY: Fast-path for duplicate events
+    // IDEMPOTENCY CHECK 1: Duplicate event_id (exact same event)
     // ========================================================================
     // If event_id already exists, return existing entry immediately.
-    // This prevents duplicate ingestion and provides idempotent semantics.
-    const existingResult = await client.query(
+    const existingByIdResult = await client.query(
       `SELECT id, sequence_number, entry_hash, created_at
        FROM ledger_entries
        WHERE id = $1
@@ -160,12 +170,12 @@ export async function ingestCanonicalEvent(
       [input.event_id]
     );
     
-    if (existingResult.rowCount === 1) {
-      const existing = existingResult.rows[0];
+    if (existingByIdResult.rowCount === 1) {
+      const existing = existingByIdResult.rows[0];
       
       logStructured({
         level: 'info',
-        msg: 'ledger_canonical_ingest_deduped',
+        msg: 'ledger_canonical_ingest_deduped_by_event_id',
         client_id: input.client_id,
         event_id: input.event_id,
         sequence_number: existing.sequence_number,
@@ -181,6 +191,45 @@ export async function ingestCanonicalEvent(
         entry_hash: existing.entry_hash,
         committed_at: existing.created_at,
       };
+    }
+    
+    // ========================================================================
+    // IDEMPOTENCY CHECK 2: Duplicate idempotency_key (retry of same logical attempt)
+    // ========================================================================
+    // Canon v1.1.1: Stable idempotency keys allow retry-safe event submission.
+    // If idempotency_key already exists, return existing entry (deduplicated).
+    // This is the PRIMARY mechanism for client-side retry safety.
+    if (input.idempotency_key) {
+      const existingByKeyResult = await client.query(
+        `SELECT id, sequence_number, entry_hash, created_at
+         FROM ledger_entries
+         WHERE idempotency_key = $1
+         LIMIT 1`,
+        [input.idempotency_key]
+      );
+      
+      if (existingByKeyResult.rowCount === 1) {
+        const existing = existingByKeyResult.rows[0];
+        
+        logStructured({
+          level: 'info',
+          msg: 'ledger_canonical_ingest_deduped_by_idempotency_key',
+          client_id: input.client_id,
+          event_id: input.event_id,
+          sequence_number: existing.sequence_number,
+          at: new Date().toISOString(),
+        });
+        
+        await client.query('COMMIT');
+        
+        return {
+          ok: true,
+          deduped: true,
+          sequence_number: existing.sequence_number,
+          entry_hash: existing.entry_hash,
+          committed_at: existing.created_at,
+        };
+      }
     }
     
     // ========================================================================
@@ -203,18 +252,74 @@ export async function ingestCanonicalEvent(
     // ========================================================================
     const payloadHash = hashPayload(input.payload);
     const entryHash = hashEntry(payloadHash, previousHash, nextSeq, input.event_id);
+
+    // ========================================================================
+    // PHASE 0: Extract snapshot hashes / ruleset / signing key (when present)
+    // ========================================================================
+    // IMPORTANT: We do NOT change the canonical envelope schema here.
+    // Producers may include these fields inside payload for verification events.
+    // Ledger persists them into dedicated columns for queryability.
+    const rulesetVersionFromPayload = getOptionalStringField(input.payload, 'ruleset_version');
+    const rulesetVersion = rulesetVersionFromPayload ?? 'v1.0.0';
+
+    const assetStateHashFromPayload = getOptionalStringField(input.payload, 'asset_state_hash');
+    const evidenceSetHashFromPayload = getOptionalStringField(input.payload, 'evidence_set_hash');
+
+    const evidenceHashes = (input.payload as { evidence_hashes?: unknown }).evidence_hashes;
+    const claimJson = (input.payload as { claim_json?: unknown }).claim_json;
+
+    const evidenceSetHash =
+      evidenceSetHashFromPayload ??
+      (Array.isArray(evidenceHashes) && evidenceHashes.every((h) => typeof h === 'string')
+        ? computeEvidenceSetHash(evidenceHashes as string[])
+        : null);
+
+    const assetStateHash =
+      assetStateHashFromPayload ??
+      (claimJson !== undefined && evidenceSetHash !== null
+        ? computeAssetStateHash({
+            claim_json: claimJson,
+            evidence_hashes: Array.isArray(evidenceHashes) ? (evidenceHashes as string[]) : [],
+            ruleset_version: rulesetVersion,
+          })
+        : null);
+
+    const verificationTier = getOptionalStringField(input.payload, 'verification_tier');
+    const signatureKeyIdFromPayload = getOptionalStringField(input.payload, 'signature_key_id');
+
+    // ========================================================================
+    // PHASE 0: Sign canonical payload (KMS-compatible abstraction)
+    // ========================================================================
+    // We sign the canonical JSON bytes of the payload to prevent silent mutation.
+    // This is launch-safe and uses an ephemeral DevSigner by default.
+    const signer = getDefaultSigner();
+    const payloadCanonical = stableStringify(input.payload);
+    const providerSig = await signer.sign(Buffer.from(payloadCanonical, 'utf8'));
+    const signatureKeyId = signatureKeyIdFromPayload ?? signer.keyId();
+
+    const signatures = {
+      ...(input.signatures ?? {}),
+      provider_sig: (input.signatures as { provider_sig?: string } | undefined)?.provider_sig ?? providerSig,
+    };
     
     // ========================================================================
-    // INSERT NEW ENTRY
+    // INSERT NEW ENTRY (race-safe with ON CONFLICT)
     // ========================================================================
+    // Uses ON CONFLICT DO NOTHING to handle race conditions where two requests
+    // with the same idempotency_key pass the pre-check simultaneously.
+    // If conflict occurs, we fetch the existing row.
     const insertResult = await client.query(
       `INSERT INTO ledger_entries
          (id, source, event_type, correlation_id, asset_id, anchor_id, actor_id,
           payload, payload_hash, previous_hash, entry_hash, created_at,
           schema_version, producer_version, occurred_at, signatures, subject,
-          idempotency_key, canonical_hash_hex)
+          idempotency_key, canonical_hash_hex,
+          ruleset_version, asset_state_hash, evidence_set_hash, signature_key_id,
+          verification_tier)
        VALUES
-         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15, $16, $17, $18)
+         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+       ON CONFLICT (source, idempotency_key) WHERE idempotency_key IS NOT NULL
+       DO NOTHING
        RETURNING sequence_number, entry_hash, created_at`,
       [
         input.event_id,
@@ -231,12 +336,52 @@ export async function ingestCanonicalEvent(
         input.schema_version,
         input.producer_version || null,
         input.occurred_at || null,
-        input.signatures || null,
+        signatures || null,
         input.subject,
         input.idempotency_key || null,
         input.canonical_hash_hex || null,
+        rulesetVersion,
+        assetStateHash,
+        evidenceSetHash,
+        signatureKeyId,
+        verificationTier,
       ]
     );
+    
+    // If INSERT returned nothing, a concurrent request won the race
+    // Fetch the existing row (race-safe dedupe)
+    if (insertResult.rowCount === 0 && input.idempotency_key) {
+      const existingResult = await client.query(
+        `SELECT id, sequence_number, entry_hash, created_at
+         FROM ledger_entries
+         WHERE source = $1 AND idempotency_key = $2
+         LIMIT 1`,
+        [input.producer, input.idempotency_key]
+      );
+      
+      if (existingResult.rowCount === 1) {
+        const existing = existingResult.rows[0];
+        
+        logStructured({
+          level: 'info',
+          msg: 'ledger_canonical_ingest_deduped_by_conflict',
+          client_id: input.client_id,
+          event_id: input.event_id,
+          sequence_number: existing.sequence_number,
+          at: new Date().toISOString(),
+        });
+        
+        await client.query('COMMIT');
+        
+        return {
+          ok: true,
+          deduped: true,
+          sequence_number: existing.sequence_number,
+          entry_hash: existing.entry_hash,
+          committed_at: existing.created_at,
+        };
+      }
+    }
     
     const inserted = insertResult.rows[0];
     

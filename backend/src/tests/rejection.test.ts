@@ -1,11 +1,10 @@
-
 import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
-import app from '../src/server';
-import { SCHEMA_VERSION } from '../src/ledger.events';
+import app from '../server.js';
+import { SCHEMA_VERSION } from '../ledger.events.js';
 
 // Mock DB and Auth
-vi.mock('../src/db', () => ({
+vi.mock('../db', () => ({
     initDb: vi.fn(),
     pool: {
         query: vi.fn().mockImplementation((query, values) => {
@@ -26,8 +25,8 @@ vi.mock('../src/db', () => ({
     }
 }));
 
-vi.mock('../src/auth', () => ({
-    requireAuth: (req, res, next) => next()
+vi.mock('../auth', () => ({
+    requireAuth: (_req: unknown, _res: unknown, next: () => void) => next()
 }));
 
 describe('Ledger Strictness Tests', () => {
