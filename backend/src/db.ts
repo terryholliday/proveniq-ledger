@@ -1,4 +1,7 @@
 import { Pool } from 'pg';
+import { existsSync, readFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -10,6 +13,15 @@ export const pool = new Pool({
   connectionString,
   max: 10,
 });
+
+ const __filename = fileURLToPath(import.meta.url);
+ const __dirname = path.dirname(__filename);
+
+ function applySqlMigration(filename: string) {
+   const fullPath = path.join(__dirname, '..', 'migrations', filename);
+   if (!existsSync(fullPath)) return null;
+   return readFileSync(fullPath, 'utf8');
+ }
 
 export async function initDb() {
   // Main ledger entries table with hash chaining for immutability
@@ -110,11 +122,32 @@ export async function initDb() {
     END $$;
   `);
 
-  // Create unique index on idempotency_key for duplicate prevention
-  // This enforces idempotency at the database level
+  // Create unique index on (source, idempotency_key) for duplicate prevention
+  // CRITICAL: Must be producer-scoped to avoid cross-producer collisions
+  // 'source' column = producer_id in this schema
   await pool.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_idempotency_key 
-    ON ledger_entries(idempotency_key) 
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_producer_idempotency_key 
+    ON ledger_entries(source, idempotency_key) 
     WHERE idempotency_key IS NOT NULL;
   `);
+  
+  // Drop old global index if it exists (was a bug - not producer-scoped)
+  await pool.query(`
+    DROP INDEX IF EXISTS idx_ledger_idempotency_key;
+  `);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE 0 MIGRATION GUARDRAIL
+  // Only apply 001 + 002 in Phase 0; additional migrations must be explicitly
+  // added here with deterministic ordering. Do NOT auto-discover migrations.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const mig001 = applySqlMigration('001_immutability_constraints.sql');
+  if (mig001) {
+    await pool.query(mig001);
+  }
+
+  const mig002 = applySqlMigration('002_phase0_read_models.sql');
+  if (mig002) {
+    await pool.query(mig002);
+  }
 }
