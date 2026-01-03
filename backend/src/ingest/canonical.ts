@@ -148,11 +148,10 @@ export async function ingestCanonicalEvent(
     );
     
     // ========================================================================
-    // IDEMPOTENCY: Fast-path for duplicate events
+    // IDEMPOTENCY CHECK 1: Duplicate event_id (exact same event)
     // ========================================================================
     // If event_id already exists, return existing entry immediately.
-    // This prevents duplicate ingestion and provides idempotent semantics.
-    const existingResult = await client.query(
+    const existingByIdResult = await client.query(
       `SELECT id, sequence_number, entry_hash, created_at
        FROM ledger_entries
        WHERE id = $1
@@ -160,12 +159,12 @@ export async function ingestCanonicalEvent(
       [input.event_id]
     );
     
-    if (existingResult.rowCount === 1) {
-      const existing = existingResult.rows[0];
+    if (existingByIdResult.rowCount === 1) {
+      const existing = existingByIdResult.rows[0];
       
       logStructured({
         level: 'info',
-        msg: 'ledger_canonical_ingest_deduped',
+        msg: 'ledger_canonical_ingest_deduped_by_event_id',
         client_id: input.client_id,
         event_id: input.event_id,
         sequence_number: existing.sequence_number,
@@ -181,6 +180,45 @@ export async function ingestCanonicalEvent(
         entry_hash: existing.entry_hash,
         committed_at: existing.created_at,
       };
+    }
+    
+    // ========================================================================
+    // IDEMPOTENCY CHECK 2: Duplicate idempotency_key (retry of same logical attempt)
+    // ========================================================================
+    // Canon v1.1.1: Stable idempotency keys allow retry-safe event submission.
+    // If idempotency_key already exists, return existing entry (deduplicated).
+    // This is the PRIMARY mechanism for client-side retry safety.
+    if (input.idempotency_key) {
+      const existingByKeyResult = await client.query(
+        `SELECT id, sequence_number, entry_hash, created_at
+         FROM ledger_entries
+         WHERE idempotency_key = $1
+         LIMIT 1`,
+        [input.idempotency_key]
+      );
+      
+      if (existingByKeyResult.rowCount === 1) {
+        const existing = existingByKeyResult.rows[0];
+        
+        logStructured({
+          level: 'info',
+          msg: 'ledger_canonical_ingest_deduped_by_idempotency_key',
+          client_id: input.client_id,
+          event_id: input.event_id,
+          sequence_number: existing.sequence_number,
+          at: new Date().toISOString(),
+        });
+        
+        await client.query('COMMIT');
+        
+        return {
+          ok: true,
+          deduped: true,
+          sequence_number: existing.sequence_number,
+          entry_hash: existing.entry_hash,
+          committed_at: existing.created_at,
+        };
+      }
     }
     
     // ========================================================================

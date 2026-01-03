@@ -9,6 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "verify": "tsx src/verify.ts",
     "verify-integrity": "tsx src/verify-integrity.ts",
     "migrate": "psql $DATABASE_URL -f migrations/001_immutability_constraints.sql"
@@ -26,7 +28,10 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.12",
     "@types/pg": "^8.11.6",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2",
     "tsx": "^4.19.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.1.0"
   }
 }
