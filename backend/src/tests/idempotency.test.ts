@@ -199,4 +199,67 @@ describe('Idempotency Key Deduplication', () => {
     expect(result2.deduped).toBe(false);
     expect(result2.sequence_number).not.toBe(result1.sequence_number);
   });
+
+  it('concurrent inserts with same idempotency_key: only one row created, both return OK', async () => {
+    // This test simulates the race condition where two requests pass the pre-check
+    // simultaneously and both attempt INSERT. The ON CONFLICT clause ensures
+    // only one succeeds, and the loser fetches the existing row.
+    
+    const stableKey = 'race-test:concurrent:1';
+    const winnerEntry = {
+      id: 'winner-id',
+      sequence_number: 200,
+      entry_hash: 'winner-hash',
+      created_at: '2026-01-03T00:00:00.000Z',
+    };
+
+    // Simulate: Both requests pass pre-checks (no existing row found)
+    // First request wins the INSERT
+    mockQuery
+      .mockResolvedValueOnce({ rows: [] }) // BEGIN
+      .mockResolvedValueOnce({ rows: [] }) // Lock
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // event_id check
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // idempotency_key check
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // latest entry
+      .mockResolvedValueOnce({ rows: [winnerEntry], rowCount: 1 }) // INSERT succeeds
+      .mockResolvedValueOnce({ rows: [] }); // COMMIT
+
+    const input1 = createTestInput({ 
+      event_id: 'request-1-id',
+      idempotency_key: stableKey,
+      producer: 'home',
+    });
+    const result1 = await ingestCanonicalEvent(mockPool, input1);
+
+    expect(result1.ok).toBe(true);
+    expect(result1.deduped).toBe(false);
+    expect(result1.sequence_number).toBe(200);
+
+    mockQuery.mockReset();
+
+    // Second request: pre-checks pass but INSERT hits ON CONFLICT DO NOTHING
+    // (rowCount === 0), so it fetches existing row
+    mockQuery
+      .mockResolvedValueOnce({ rows: [] }) // BEGIN
+      .mockResolvedValueOnce({ rows: [] }) // Lock
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // event_id check - different event_id
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // idempotency_key check - RACE: not found yet
+      .mockResolvedValueOnce({ rows: [{ sequence_number: 199, entry_hash: 'prev' }], rowCount: 1 }) // latest entry
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // INSERT hits conflict, returns nothing
+      .mockResolvedValueOnce({ rows: [winnerEntry], rowCount: 1 }) // Fallback fetch existing
+      .mockResolvedValueOnce({ rows: [] }); // COMMIT
+
+    const input2 = createTestInput({ 
+      event_id: 'request-2-id', // Different event_id
+      idempotency_key: stableKey, // SAME idempotency_key
+      producer: 'home',
+    });
+    const result2 = await ingestCanonicalEvent(mockPool, input2);
+
+    // Second request should return OK with deduped: true
+    expect(result2.ok).toBe(true);
+    expect(result2.deduped).toBe(true);
+    expect(result2.sequence_number).toBe(200); // Same as winner
+    expect(result2.entry_hash).toBe('winner-hash'); // Same as winner
+  });
 });
