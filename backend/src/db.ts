@@ -136,13 +136,18 @@ export async function initDb() {
     DROP INDEX IF EXISTS idx_ledger_idempotency_key;
   `);
 
-   const mig001 = applySqlMigration('001_immutability_constraints.sql');
-   if (mig001) {
-     await pool.query(mig001);
-   }
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE 0 MIGRATION GUARDRAIL
+  // Only apply 001 + 002 in Phase 0; additional migrations must be explicitly
+  // added here with deterministic ordering. Do NOT auto-discover migrations.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const mig001 = applySqlMigration('001_immutability_constraints.sql');
+  if (mig001) {
+    await pool.query(mig001);
+  }
 
-   const mig002 = applySqlMigration('002_phase0_read_models.sql');
-   if (mig002) {
-     await pool.query(mig002);
-   }
+  const mig002 = applySqlMigration('002_phase0_read_models.sql');
+  if (mig002) {
+    await pool.query(mig002);
+  }
 }
