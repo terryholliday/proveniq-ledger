@@ -110,11 +110,17 @@ export async function initDb() {
     END $$;
   `);
 
-  // Create unique index on idempotency_key for duplicate prevention
-  // This enforces idempotency at the database level
+  // Create unique index on (source, idempotency_key) for duplicate prevention
+  // CRITICAL: Must be producer-scoped to avoid cross-producer collisions
+  // 'source' column = producer_id in this schema
   await pool.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_idempotency_key 
-    ON ledger_entries(idempotency_key) 
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_producer_idempotency_key 
+    ON ledger_entries(source, idempotency_key) 
     WHERE idempotency_key IS NOT NULL;
+  `);
+  
+  // Drop old global index if it exists (was a bug - not producer-scoped)
+  await pool.query(`
+    DROP INDEX IF EXISTS idx_ledger_idempotency_key;
   `);
 }

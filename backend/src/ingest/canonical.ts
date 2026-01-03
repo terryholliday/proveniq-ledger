@@ -243,8 +243,11 @@ export async function ingestCanonicalEvent(
     const entryHash = hashEntry(payloadHash, previousHash, nextSeq, input.event_id);
     
     // ========================================================================
-    // INSERT NEW ENTRY
+    // INSERT NEW ENTRY (race-safe with ON CONFLICT)
     // ========================================================================
+    // Uses ON CONFLICT DO NOTHING to handle race conditions where two requests
+    // with the same idempotency_key pass the pre-check simultaneously.
+    // If conflict occurs, we fetch the existing row.
     const insertResult = await client.query(
       `INSERT INTO ledger_entries
          (id, source, event_type, correlation_id, asset_id, anchor_id, actor_id,
@@ -253,6 +256,8 @@ export async function ingestCanonicalEvent(
           idempotency_key, canonical_hash_hex)
        VALUES
          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12, $13, $14, $15, $16, $17, $18)
+       ON CONFLICT (source, idempotency_key) WHERE idempotency_key IS NOT NULL
+       DO NOTHING
        RETURNING sequence_number, entry_hash, created_at`,
       [
         input.event_id,
@@ -275,6 +280,41 @@ export async function ingestCanonicalEvent(
         input.canonical_hash_hex || null,
       ]
     );
+    
+    // If INSERT returned nothing, a concurrent request won the race
+    // Fetch the existing row (race-safe dedupe)
+    if (insertResult.rowCount === 0 && input.idempotency_key) {
+      const existingResult = await client.query(
+        `SELECT id, sequence_number, entry_hash, created_at
+         FROM ledger_entries
+         WHERE source = $1 AND idempotency_key = $2
+         LIMIT 1`,
+        [input.producer, input.idempotency_key]
+      );
+      
+      if (existingResult.rowCount === 1) {
+        const existing = existingResult.rows[0];
+        
+        logStructured({
+          level: 'info',
+          msg: 'ledger_canonical_ingest_deduped_by_conflict',
+          client_id: input.client_id,
+          event_id: input.event_id,
+          sequence_number: existing.sequence_number,
+          at: new Date().toISOString(),
+        });
+        
+        await client.query('COMMIT');
+        
+        return {
+          ok: true,
+          deduped: true,
+          sequence_number: existing.sequence_number,
+          entry_hash: existing.entry_hash,
+          committed_at: existing.created_at,
+        };
+      }
+    }
     
     const inserted = insertResult.rows[0];
     
